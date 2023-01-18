@@ -1,18 +1,27 @@
+using Sirenix.Utilities;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 using Random = Unity.Mathematics.Random;
+using System.Linq;
+using Unity.Burst.Intrinsics;
 
 [Serializable]
-public class CellConfiguration
+public class CellConfigurationMono
 {
     public int Id;
     public int NumberOfCells;
     public GameObject Prefab;
+}
+
+[Serializable]
+public class CellRuleMono
+{
+    public int Id1;
+    public int Id2;
+    public float Amount;
 }
 
 public class CellSpawnerMono : MonoBehaviour
@@ -20,23 +29,43 @@ public class CellSpawnerMono : MonoBehaviour
     public float2 Dimension;
     public float Speed;
     [SerializeReference]
-    public List<CellConfiguration> CellConfigurations;
+    public List<CellConfigurationMono> CellConfigurations;
+    public CellRuleMono[] Rules;
 }
 
 public class CellSpawnerBaker : Baker<CellSpawnerMono>
 {
     public override void Bake(CellSpawnerMono authoring)
     {
-        var propsBuffer = AddBuffer<CellConfigurationProperties>();
-        authoring.CellConfigurations.ForEach(a =>
+        var cells = authoring.CellConfigurations.Select(a => new CellConfigurationProperties
         {
-            propsBuffer.Add(new CellConfigurationProperties
-            {
-                Id = a.Id,
-                NumberOfCells = a.NumberOfCells,
-                Prefab = GetEntity(a.Prefab)
-            });
-        });
+            Id = a.Id,
+            NumberOfCells = a.NumberOfCells,
+            Prefab = GetEntity(a.Prefab)
+        }).ToArray();
+        var propsBuffer = AddBuffer<CellConfigurationProperties>();
+        propsBuffer.CopyFrom(cells);
+
+        //authoring.CellConfigurations.ForEach(a =>
+        //{
+        //    propsBuffer.Add(new CellConfigurationProperties
+        //    {
+        //        Id = a.Id,
+        //        NumberOfCells = a.NumberOfCells,
+        //        Prefab = GetEntity(a.Prefab)
+        //    });
+        //});
+
+        //var rulesBuffer = AddBuffer<CellRule>();
+        //authoring.Rules.ForEach(rule =>
+        //{
+        //    rulesBuffer.Add(new CellRule
+        //    {
+        //        Id1 = rule.Id1,
+        //        Id2 = rule.Id2,
+        //        Amount = rule.Amount,
+        //    });
+        //});
 
         AddComponent(new WorldProperties
         {

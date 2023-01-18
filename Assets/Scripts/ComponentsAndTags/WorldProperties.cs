@@ -2,7 +2,7 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 
-public struct CellRule: IComponentData
+public struct CellRule: IBufferElementData
 {
     public int Id1;
     public int Id2;

@@ -40,7 +40,11 @@ public partial struct SpawnCellsSystem : ISystem
                     Scale = 1f
                 });
 
-                ecb.AddComponent(cell, new CellProperties {  Velocity = new float3(.1f, 0, 0) });
+                ecb.AddComponent(cell, new CellProperties {  
+                    Velocity = new float3(0, 0, 0),
+                });
+
+                ecb.AddBuffer<VelocityChange>(cell);
             }
         }
 
