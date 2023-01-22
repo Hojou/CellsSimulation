@@ -46,26 +46,14 @@ public class CellSpawnerBaker : Baker<CellSpawnerMono>
         var propsBuffer = AddBuffer<CellConfigurationProperties>();
         propsBuffer.CopyFrom(cells);
 
-        //authoring.CellConfigurations.ForEach(a =>
-        //{
-        //    propsBuffer.Add(new CellConfigurationProperties
-        //    {
-        //        Id = a.Id,
-        //        NumberOfCells = a.NumberOfCells,
-        //        Prefab = GetEntity(a.Prefab)
-        //    });
-        //});
-
-        //var rulesBuffer = AddBuffer<CellRule>();
-        //authoring.Rules.ForEach(rule =>
-        //{
-        //    rulesBuffer.Add(new CellRule
-        //    {
-        //        Id1 = rule.Id1,
-        //        Id2 = rule.Id2,
-        //        Amount = rule.Amount,
-        //    });
-        //});
+        var rules = authoring.Rules.Select(rule => new CellRule
+        {
+            Id1 = rule.Id1,
+            Id2 = rule.Id2,
+            Amount = rule.Amount,
+        }).ToArray();
+        var rulesBuffer = AddBuffer<CellRule>();
+        rulesBuffer.CopyFrom(rules);
 
         AddComponent(new WorldProperties
         {

@@ -1,15 +1,23 @@
-using System.Collections;
-using System.Collections.Generic;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
-using UnityEngine;
 
 public readonly partial struct CellPropertiesAspect : IAspect
 {
-    public readonly RefRW<CellProperties> cellProperties;
+    private readonly RefRW<CellProperties> cellProperties;
+    private readonly TransformAspect transform;
     public readonly DynamicBuffer<VelocityChange> velocityChanges;
-    //public readonly DynamicBuffer<CellRule> cellRules;
-    public readonly TransformAspect transform;
+
+    public int Id => cellProperties.ValueRO.Id;
+    public float3 LocalPosition
+    {
+        get => transform.LocalPosition;
+        set => transform.LocalPosition = value;
+    } 
+    public float3 Velocity
+    {
+        get => cellProperties.ValueRO.Velocity;
+        set => cellProperties.ValueRW.Velocity = value;
+    }
 }
 

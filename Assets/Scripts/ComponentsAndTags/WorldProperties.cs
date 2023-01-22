@@ -22,6 +22,7 @@ public struct WorldProperties : IComponentData
     public float Speed;
 }
 
+
 public struct CellRandom : IComponentData
 {
     public Random Value;

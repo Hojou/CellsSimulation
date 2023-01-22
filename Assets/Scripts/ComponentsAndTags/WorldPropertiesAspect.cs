@@ -5,6 +5,7 @@ public readonly partial struct WorldPropertiesAspect : IAspect
 {
     public readonly Entity Entity;
     public readonly DynamicBuffer<CellConfigurationProperties> cellProperties;
+    public readonly DynamicBuffer<CellRule> cellRules;
 
     private readonly RefRW<CellRandom> _cellRandom;
     private readonly RefRO<WorldProperties> _worldProperties;

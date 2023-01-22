@@ -42,42 +42,25 @@ public partial struct MoveCellJob: IJobEntity
         foreach (var change in aspect.velocityChanges)
         {
             velocityChange = velocityChange + change.Value;
-
         }
-        Debug.Log($"{sortKey}: {velocityChange}");
         aspect.velocityChanges.Clear();
 
-        float3 newVelocity = (aspect.cellProperties.ValueRW.Velocity + velocityChange) * .5f;
-        float3 newPos = aspect.transform.LocalPosition + newVelocity * DeltaTime * .01f;
+        //Debug.Log($"{sortKey}: {velocityChange}");
+
+        float3 newVelocity = (aspect.Velocity + velocityChange) * .5f;
+        float3 newPos = aspect.LocalPosition + newVelocity * DeltaTime;
 
         bool flipX = newPos.x < -5f || newPos.x > 5f;
         bool flipZ = newPos.z < -5f || newPos.z > 5f;
-        aspect.cellProperties.ValueRW.Velocity = new float3(
+
+        aspect.Velocity = new float3(
             flipX ? -newVelocity.x : newVelocity.x, 
             0, 
             flipZ ?-newVelocity.z : newVelocity.z
         );
-        if (flipX)
-        {
-            //if (sortKey == 1) Debug.Log($"{newPos} | {newVelocity} : {aspect.cellProperties.ValueRW.Velocity}");
-            newPos.x = math.clamp(newPos.x, -5, 5);
-        }
+        if (flipX) newPos.x = math.clamp(newPos.x, -5, 5);
         if (flipZ) newPos.z = math.clamp(newPos.z, -5, 5);
-        aspect.transform.LocalPosition =  newPos;
-
-        //if (newPos.x < -5f || newPos.x > 5f)
-        //{
-        //    aspect.cellProperties.ValueRW.Velocity = new float3(-newVelocity.x, newVelocity.y, newVelocity.z);
-        //}
-
-        //if (newPos.y < -5f || newPos.y > 5f)
-        //{
-        //    aspect.cellProperties.ValueRW.Velocity = new float3(newVelocity.x, -newVelocity.y, newVelocity.z);
-        //}
-
-
-        //aspect.transform.LocalPosition = newPos;
-
+        aspect.LocalPosition =  newPos;
     }
 
 }
