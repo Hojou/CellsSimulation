@@ -1,6 +1,4 @@
-using JetBrains.Annotations;
 using System;
-using System.Linq;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -11,6 +9,12 @@ public struct SharedRulesGrouping : ISharedComponentData
 {
     public int Group;
     public NativeArray<RuleAmount> Rules;
+}
+
+public struct SharedRulesForGrouping : ISharedComponentData
+{
+    public int GroupFor;
+    public float Amount;
 }
 
 [Serializable]
@@ -41,11 +45,17 @@ public partial struct SpawnCellsSystem : ISystem
         var ecb = new EntityCommandBuffer(Allocator.Temp);
 
         foreach (var property in buffer) {
-            var rules = aspect.cellRules
-                    .Where(r => r.Id1 == property.Id)
-                    .Select(r => new RuleAmount { Id = r.Id2, Amount = r.Amount })
-                    .OrderBy(t => t.Id).ToArray();
-            var nrules = new NativeArray<RuleAmount>(rules, Allocator.Persistent);
+            var rules = new NativeList<RuleAmount>(Allocator.Temp);
+            foreach (var rule in aspect.cellRules)
+            {
+                if (rule.Id1 != property.Id) continue;
+                rules.Add(new RuleAmount {  Id = rule.Id2, Amount = rule.Amount });
+            }
+            var rulesComponent = new SharedRulesGrouping
+            {
+                Group = property.Id,
+                Rules = rules.ToArray(Allocator.Persistent)
+            };
 
             for (int i = 0; i < property.NumberOfCells; i++)
             {
@@ -62,11 +72,13 @@ public partial struct SpawnCellsSystem : ISystem
                     Velocity = new float3(0, 0, 0),
                 });
 
-                ecb.AddSharedComponent(cell, new SharedRulesGrouping
+                ecb.AddSharedComponent(cell, rulesComponent);
+                foreach (var rule in aspect.cellRules)
                 {
-                    Group = property.Id,
-                    Rules = nrules
-                });
+                    if (rule.Id2 != property.Id) continue;  
+                    var groupFor = new SharedRulesForGrouping {  GroupFor = rule.Id1 };
+                    ecb.AddSharedComponent(cell, groupFor);
+                }
 
                 ecb.AddBuffer<VelocityChange>(cell);
             }
