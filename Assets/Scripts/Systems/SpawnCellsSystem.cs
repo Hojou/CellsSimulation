@@ -11,11 +11,11 @@ public struct SharedRulesGrouping : ISharedComponentData
     public NativeArray<RuleAmount> Rules;
 }
 
-public struct SharedRulesForGrouping : ISharedComponentData
-{
-    public int GroupFor;
-    public float Amount;
-}
+//public struct SharedRulesForGrouping : ISharedComponentData
+//{
+//    public int GroupFor;
+//    public float Amount;
+//}
 
 [Serializable]
 public struct RuleAmount { public int Id; public float Amount; }
@@ -73,12 +73,12 @@ public partial struct SpawnCellsSystem : ISystem
                 });
 
                 ecb.AddSharedComponent(cell, rulesComponent);
-                foreach (var rule in aspect.cellRules)
-                {
-                    if (rule.Id2 != property.Id) continue;  
-                    var groupFor = new SharedRulesForGrouping {  GroupFor = rule.Id1 };
-                    ecb.AddSharedComponent(cell, groupFor);
-                }
+                //foreach (var rule in aspect.cellRules) // TODO: Not using this?
+                //{
+                //    if (rule.Id2 != property.Id) continue;  
+                //    var groupFor = new SharedRulesForGrouping {  GroupFor = rule.Id1 };
+                //    ecb.AddSharedComponent(cell, groupFor);
+                //}
 
                 ecb.AddBuffer<VelocityChange>(cell);
             }

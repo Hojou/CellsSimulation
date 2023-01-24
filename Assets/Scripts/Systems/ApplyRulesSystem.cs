@@ -1,6 +1,7 @@
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
 using Unity.Transforms;
 
 [BurstCompile]
@@ -8,6 +9,7 @@ using Unity.Transforms;
 public partial struct ApplyRulesSystem : ISystem, ISystemStartStop
 {
     private EntityQuery _jobQuery;
+    private EntityQuery _matchQuery;
     private NativeList<SharedRulesGrouping> _uniqueCellTypes;
 
     [BurstCompile]
@@ -18,8 +20,10 @@ public partial struct ApplyRulesSystem : ISystem, ISystemStartStop
         using var queryBuilder = new EntityQueryBuilder(Allocator.Temp)
                         .WithAll<CellProperties>()
                         .WithAll<SharedRulesGrouping>()
-                        .WithAll<LocalToWorld>();
+                        .WithAll<LocalTransform>()
+                        ;
         _jobQuery = state.GetEntityQuery(queryBuilder);
+        _matchQuery = state.GetEntityQuery(queryBuilder);
     }
 
     [BurstCompile]
@@ -40,15 +44,17 @@ public partial struct ApplyRulesSystem : ISystem, ISystemStartStop
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
+        var handle = state.Dependency;
         // TODO: REMOVE disable system
-        state.Enabled = false;
+        //state.Enabled = false;
 
-        //float deltaTime = math.min(0.05f, SystemAPI.Time.DeltaTime);
-        //var allCells = _jobQuery.ToComponentDataArray<CellProperties>(Allocator.TempJob);
+        float deltaTime = math.min(0.05f, SystemAPI.Time.DeltaTime);
+        var cellProperties = _jobQuery.ToComponentDataArray<CellProperties>(Allocator.TempJob); 
+        var cellLocations = _jobQuery.ToComponentDataArray<LocalTransform>(Allocator.TempJob);
 
         foreach (var cellType in _uniqueCellTypes)
         {
-            //UnityEngine.Debug.Log("uniqueCellType " + cellType.Group);
+            UnityEngine.Debug.Log("uniqueCellType " + cellType.Group);
             _jobQuery.AddSharedComponentFilter(cellType);
 
             var cellCount = _jobQuery.CalculateEntityCount();
@@ -58,49 +64,51 @@ public partial struct ApplyRulesSystem : ISystem, ISystemStartStop
                 continue;
             }
 
-            //var map = new NativeHashMap<int, float>(cellType.Rules.Length, Allocator.TempJob);
-            //foreach (var rule in cellType.Rules)
-            //{
-            //    map.Add(rule.Id, rule.Amount);
-            //}
+            var rulesMap = new NativeHashMap<int, float>(cellType.Rules.Length, Allocator.TempJob);
+            foreach (var rule in cellType.Rules)
+            {
+                rulesMap.Add(rule.Id, rule.Amount);
+            }
 
             var job = new ApplyRuleJob
             {
-                //DeltaTime = deltaTime,
-                //AllCells = allCells,
-                //Rules = map,
+                DeltaTime = deltaTime,
+                CellPositions = cellLocations,
+                CellProperties = cellProperties,
+                Rules = rulesMap,
             };
-            job.ScheduleParallel(_jobQuery);
-            //job.Run();
+            handle = job.ScheduleParallel(_jobQuery, handle);
 
             _jobQuery.ResetFilter();
         }
+        state.Dependency = handle;
     }
 }
 
 public partial struct ApplyRuleJob: IJobEntity
 {
-    //public float DeltaTime;
-    //[ReadOnly] public NativeArray<CellProperties> AllCells;
-    //[ReadOnly] public NativeHashMap<int, float> Rules;
-    public void Execute([ReadOnly] in CellProperties aspect)
+    public float DeltaTime;
+    [ReadOnly] public NativeArray<LocalTransform> CellPositions;
+    [ReadOnly] public NativeArray<CellProperties> CellProperties;
+    [ReadOnly] public NativeHashMap<int, float> Rules;
+    public void Execute(in TransformAspect aspect, ref DynamicBuffer<VelocityChange> velocityChanges)
     {
-        //var pos = aspect.LocalPosition;
-        UnityEngine.Debug.Log("Run");
-        //foreach (var cellPosition in AllCells)
-        //{
-        //    var pos = aspect.LocalPosition;
-        //    var dx = pos.x - cellPosition.Position.x;
-        //    var dz = pos.z - cellPosition.Position.z;
-        //    var dist = math.sqrt(dx * dx + dz * dz);
-
-        //    if (dist > 0 && dist < 80)
-        //    {
-        //        Rules.TryGetValue()
-        //        var force = (RuleAmount * .01f) / dist;
-        //        var velocityChange = new float3(dx * force, 0, dz * force);
-        //        aspect.velocityChanges.Add(new VelocityChange { Value = velocityChange });
-        //    }
-        //}
+        var pos = aspect.LocalPosition;
+        var length = CellPositions.Length;
+        for (int i = 0; i < length; i++)
+        {
+            var otherId = CellProperties[i].Id;
+            if (!Rules.TryGetValue(otherId, out float amount)) continue;
+            var otherPos = CellPositions[i].Position;
+            var dx = otherPos.x - pos.x;
+            var dz = otherPos.z - pos.z;
+            var dist = math.sqrt(dx * dx + dz * dz);
+            if (dist > 0 && dist < 4)
+            {
+                var force = amount / dist;
+                var velocityChange = force * new float3(dx, 0, dz);
+                velocityChanges.Add(new VelocityChange { Value = velocityChange });
+            }
+        }        
     }
 }

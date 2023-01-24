@@ -1,3 +1,4 @@
+using TMPro;
 using Unity.Entities;
 using Unity.Mathematics;
 
@@ -9,6 +10,8 @@ public readonly partial struct WorldPropertiesAspect : IAspect
 
     private readonly RefRW<CellRandom> _cellRandom;
     private readonly RefRO<WorldProperties> _worldProperties;
+
+    public float Speed => _worldProperties.ValueRO.Speed;
 
     public float3 GetRandomPosition()
     {
