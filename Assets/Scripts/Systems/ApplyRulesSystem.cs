@@ -45,8 +45,6 @@ public partial struct ApplyRulesSystem : ISystem, ISystemStartStop
     public void OnUpdate(ref SystemState state)
     {
         var handle = state.Dependency;
-        // TODO: REMOVE disable system
-        //state.Enabled = false;
 
         float deltaTime = math.min(0.05f, SystemAPI.Time.DeltaTime);
         var cellProperties = _jobQuery.ToComponentDataArray<CellProperties>(Allocator.TempJob); 
@@ -54,7 +52,7 @@ public partial struct ApplyRulesSystem : ISystem, ISystemStartStop
 
         foreach (var cellType in _uniqueCellTypes)
         {
-            UnityEngine.Debug.Log("uniqueCellType " + cellType.Group);
+            //UnityEngine.Debug.Log("uniqueCellType " + cellType.Group);
             _jobQuery.AddSharedComponentFilter(cellType);
 
             var cellCount = _jobQuery.CalculateEntityCount();
@@ -100,8 +98,10 @@ public partial struct ApplyRuleJob: IJobEntity
             var otherId = CellProperties[i].Id;
             if (!Rules.TryGetValue(otherId, out float amount)) continue;
             var otherPos = CellPositions[i].Position;
-            var dx = otherPos.x - pos.x;
-            var dz = otherPos.z - pos.z;
+            var dx = pos.x - otherPos.x;
+            var dz = pos.z - otherPos.z;
+            //var dx = otherPos.x - pos.x;
+            //var dz = otherPos.z - pos.z;
             var dist = math.sqrt(dx * dx + dz * dz);
             if (dist > 0 && dist < 4)
             {

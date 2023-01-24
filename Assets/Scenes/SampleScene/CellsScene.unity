@@ -156,6 +156,7 @@ MonoBehaviour:
     x: 10
     y: 10
   Speed: 1
+  RandomSeed: 15
   CellConfigurations:
   - rid: 5594738889444556800
   - rid: 5594738889444556801
@@ -164,13 +165,25 @@ MonoBehaviour:
   Rules:
   - Id1: 1
     Id2: 1
-    Amount: 2
-  - Id1: 2
-    Id2: 2
-    Amount: 0
+    Amount: -0.32
   - Id1: 1
     Id2: 2
-    Amount: 0
+    Amount: -0.17
+  - Id1: 1
+    Id2: 3
+    Amount: 0.34
+  - Id1: 2
+    Id2: 2
+    Amount: -0.1
+  - Id1: 2
+    Id2: 1
+    Amount: -0.34
+  - Id1: 3
+    Id2: 3
+    Amount: 0.15
+  - Id1: 3
+    Id2: 1
+    Amount: -0.2
   references:
     version: 2
     RefIds:
@@ -178,29 +191,29 @@ MonoBehaviour:
       type: {class: CellConfigurationMono, ns: , asm: Assembly-CSharp}
       data:
         Id: 1
-        NumberOfCells: 2
-        Prefab: {fileID: 871539308539187311, guid: 90e25f341b3d23c438d54516819bf732,
+        NumberOfCells: 200
+        Prefab: {fileID: 871539308539187311, guid: 07521cadc5144f44aaba2e2a4c3488c5,
           type: 3}
     - rid: 5594738889444556801
       type: {class: CellConfigurationMono, ns: , asm: Assembly-CSharp}
       data:
         Id: 2
-        NumberOfCells: 2
-        Prefab: {fileID: 871539308539187311, guid: 07521cadc5144f44aaba2e2a4c3488c5,
+        NumberOfCells: 200
+        Prefab: {fileID: 871539308539187311, guid: 15b88f170d97cb74d9204312eceed27d,
           type: 3}
     - rid: 5594738889444556802
       type: {class: CellConfigurationMono, ns: , asm: Assembly-CSharp}
       data:
         Id: 3
-        NumberOfCells: 0
-        Prefab: {fileID: 871539308539187311, guid: 15b88f170d97cb74d9204312eceed27d,
+        NumberOfCells: 200
+        Prefab: {fileID: 871539308539187311, guid: db3ed7157b18c304280f8f19a8a9d298,
           type: 3}
     - rid: 5594739016417411072
       type: {class: CellConfigurationMono, ns: , asm: Assembly-CSharp}
       data:
         Id: 4
-        NumberOfCells: 2
-        Prefab: {fileID: 871539308539187311, guid: db3ed7157b18c304280f8f19a8a9d298,
+        NumberOfCells: 0
+        Prefab: {fileID: 871539308539187311, guid: 90e25f341b3d23c438d54516819bf732,
           type: 3}
 --- !u!4 &1750367394
 Transform:

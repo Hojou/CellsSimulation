@@ -31,7 +31,7 @@ public partial struct MoveCellsSystem : ISystem
         var handle = new MoveCellJob
         {
             DeltaTime = deltaTime * aspect.Speed,
-        }.Schedule(state.Dependency); // where to pass in handle?
+        }.ScheduleParallel(state.Dependency);
 
         state.Dependency = handle;
     }
@@ -50,9 +50,9 @@ public partial struct MoveCellJob: IJobEntity
         }
         aspect.velocityChanges.Clear();
 
-        Debug.Log($"{velocityChange}");
+        //Debug.Log($"{velocityChange}");
 
-        float3 newVelocity = (aspect.Velocity + velocityChange) * .75f;
+        float3 newVelocity = (aspect.Velocity + velocityChange) * .5f;
         float3 newPos = aspect.LocalPosition + newVelocity * DeltaTime;
         aspect.LocalPosition= aspect.LocalPosition + newVelocity * DeltaTime;
 
@@ -60,13 +60,14 @@ public partial struct MoveCellJob: IJobEntity
         bool flipZ = newPos.z <= -5f || newPos.z >= 5f;
 
         newVelocity = new float3(
-            flipX ? -newVelocity.x * 3: newVelocity.x,
+            flipX ? -newVelocity.x * 2: newVelocity.x,
             0,
-            flipZ ? -newVelocity.z * 3: newVelocity.z
+            flipZ ? -newVelocity.z * 2: newVelocity.z
         );
         aspect.Velocity = newVelocity;
-        //if (flipX) newPos.x = math.clamp(newPos.x, -5, 5);
-        //if (flipZ) newPos.z = math.clamp(newPos.z, -5, 5);
+
+        if (flipX) newPos.x = math.clamp(newPos.x, -5, 5);
+        if (flipZ) newPos.z = math.clamp(newPos.z, -5, 5);
     }
 
 }
