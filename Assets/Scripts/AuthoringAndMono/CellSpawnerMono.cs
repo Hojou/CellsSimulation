@@ -29,6 +29,7 @@ public class CellSpawnerMono : MonoBehaviour
     public float2 Dimension;
     public float Speed;
     public uint RandomSeed;
+    public float Scale;
     [SerializeReference]
     public List<CellConfigurationMono> CellConfigurations;
     public CellRuleMono[] Rules;
@@ -60,6 +61,7 @@ public class CellSpawnerBaker : Baker<CellSpawnerMono>
         {
             Dimension = authoring.Dimension,
             Speed = authoring.Speed,
+            Scale = authoring.Scale,
         });
 
         AddComponent(new CellRandom { Value = Random.CreateFromIndex(authoring.RandomSeed) });

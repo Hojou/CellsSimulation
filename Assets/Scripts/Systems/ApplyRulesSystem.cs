@@ -83,16 +83,18 @@ public partial struct ApplyRulesSystem : ISystem, ISystemStartStop
     }
 }
 
+[BurstCompile]
 public partial struct ApplyRuleJob: IJobEntity
 {
     public float DeltaTime;
     [ReadOnly] public NativeArray<LocalTransform> CellPositions;
     [ReadOnly] public NativeArray<CellProperties> CellProperties;
     [ReadOnly] public NativeHashMap<int, float> Rules;
-    public void Execute(in TransformAspect aspect, ref DynamicBuffer<VelocityChange> velocityChanges)
+    public void Execute(in TransformAspect aspect, ref CellProperties properties)
     {
         var pos = aspect.LocalPosition;
         var length = CellPositions.Length;
+        var velocityChange = float3.zero;
         for (int i = 0; i < length; i++)
         {
             var otherId = CellProperties[i].Id;
@@ -100,15 +102,13 @@ public partial struct ApplyRuleJob: IJobEntity
             var otherPos = CellPositions[i].Position;
             var dx = pos.x - otherPos.x;
             var dz = pos.z - otherPos.z;
-            //var dx = otherPos.x - pos.x;
-            //var dz = otherPos.z - pos.z;
             var dist = math.sqrt(dx * dx + dz * dz);
-            if (dist > 0 && dist < 4)
+            if (dist > 0 && dist < 1.6f)
             {
                 var force = amount / dist;
-                var velocityChange = force * new float3(dx, 0, dz);
-                velocityChanges.Add(new VelocityChange { Value = velocityChange });
+                velocityChange += force * new float3(dx, 0, dz);
             }
-        }        
+        }
+        properties.Velocity = (properties.Velocity + velocityChange) * .5f;
     }
 }

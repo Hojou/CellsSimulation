@@ -19,7 +19,10 @@ public struct WorldProperties : IComponentData
 {
     public float2 Dimension;
     public float Speed;
+    public float Scale;
 }
+
+//public struct VelocityC
 
 
 public struct CellRandom : IComponentData

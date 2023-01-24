@@ -24,13 +24,16 @@ public partial struct MoveCellsSystem : ISystem
     {
         var properties = SystemAPI.GetSingletonEntity<WorldProperties>();
         var aspect = SystemAPI.GetAspectRW<WorldPropertiesAspect>(properties);
-        
+        var dimensions = aspect.Dimensions;
         var deltaTime = math.min(0.05f, SystemAPI.Time.DeltaTime);
-
 
         var handle = new MoveCellJob
         {
             DeltaTime = deltaTime * aspect.Speed,
+            MinX = -(dimensions.x / 2),
+            MaxX = (dimensions.x / 2),
+            MinY = -(dimensions.y / 2),
+            MaxY= (dimensions.y / 2),
         }.ScheduleParallel(state.Dependency);
 
         state.Dependency = handle;
@@ -41,33 +44,32 @@ public partial struct MoveCellsSystem : ISystem
 public partial struct MoveCellJob: IJobEntity
 {
     public float DeltaTime;
+    public float MinX;
+    public float MaxX;
+    public float MinY;
+    public float MaxY;
     private void Execute(ref CellPropertiesAspect aspect)
     {
-        float3 velocityChange = float3.zero;
-        foreach (var change in aspect.velocityChanges)
-        {
-            velocityChange = velocityChange + change.Value;
-        }
-        aspect.velocityChanges.Clear();
+        var velocity = aspect.Velocity;
+        float3 newPos = aspect.LocalPosition + velocity * DeltaTime;
 
-        //Debug.Log($"{velocityChange}");
-
-        float3 newVelocity = (aspect.Velocity + velocityChange) * .5f;
-        float3 newPos = aspect.LocalPosition + newVelocity * DeltaTime;
-        aspect.LocalPosition= aspect.LocalPosition + newVelocity * DeltaTime;
-
-        bool flipX = (newPos.x <= -5f || newPos.x >= 5f);
+        bool flipX = newPos.x <= -5f || newPos.x >= 5f;
         bool flipZ = newPos.z <= -5f || newPos.z >= 5f;
 
-        newVelocity = new float3(
-            flipX ? -newVelocity.x * 2: newVelocity.x,
-            0,
-            flipZ ? -newVelocity.z * 2: newVelocity.z
-        );
-        aspect.Velocity = newVelocity;
+        if (flipX || flipZ)
+        {
+            velocity = new float3(
+                flipX ? -velocity.x * 1: velocity.x,
+                0,
+                flipZ ? -velocity.z * 1: velocity.z
+            );
+            aspect.Velocity = velocity;
 
-        if (flipX) newPos.x = math.clamp(newPos.x, -5, 5);
-        if (flipZ) newPos.z = math.clamp(newPos.z, -5, 5);
+            if (flipX) newPos.x = math.clamp(newPos.x, -5, 5);
+            if (flipZ) newPos.z = math.clamp(newPos.z, -5, 5);
+        }
+
+        aspect.LocalPosition = aspect.LocalPosition + velocity * DeltaTime;
     }
 
 }

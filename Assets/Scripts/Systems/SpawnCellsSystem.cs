@@ -64,7 +64,7 @@ public partial struct SpawnCellsSystem : ISystem
                 {
                     Position = aspect.GetRandomPosition(),
                     Rotation = quaternion.identity,
-                    Scale = 1f
+                    Scale = aspect.Scale
                 });
 
                 ecb.AddComponent(cell, new CellProperties {  

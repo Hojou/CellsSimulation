@@ -12,6 +12,9 @@ public readonly partial struct WorldPropertiesAspect : IAspect
     private readonly RefRO<WorldProperties> _worldProperties;
 
     public float Speed => _worldProperties.ValueRO.Speed;
+    public float Scale => _worldProperties.ValueRO.Scale;
+    public float2 Dimensions => _worldProperties.ValueRO.Dimension;
+
 
     public float3 GetRandomPosition()
     {

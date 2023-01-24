@@ -155,8 +155,9 @@ MonoBehaviour:
   Dimension:
     x: 10
     y: 10
-  Speed: 1
-  RandomSeed: 15
+  Speed: 0.5
+  RandomSeed: 1337
+  Scale: 0.2
   CellConfigurations:
   - rid: 5594738889444556800
   - rid: 5594738889444556801
@@ -184,6 +185,15 @@ MonoBehaviour:
   - Id1: 3
     Id2: 1
     Amount: -0.2
+  - Id1: 4
+    Id2: 1
+    Amount: 0.5
+  - Id1: 4
+    Id2: 3
+    Amount: -0.49
+  - Id1: 4
+    Id2: 4
+    Amount: -0.7
   references:
     version: 2
     RefIds:
@@ -191,29 +201,29 @@ MonoBehaviour:
       type: {class: CellConfigurationMono, ns: , asm: Assembly-CSharp}
       data:
         Id: 1
-        NumberOfCells: 200
-        Prefab: {fileID: 871539308539187311, guid: 07521cadc5144f44aaba2e2a4c3488c5,
+        NumberOfCells: 1000
+        Prefab: {fileID: 1598637203834845707, guid: be3fea1953699a54b9b6392618aede53,
           type: 3}
     - rid: 5594738889444556801
       type: {class: CellConfigurationMono, ns: , asm: Assembly-CSharp}
       data:
         Id: 2
-        NumberOfCells: 200
-        Prefab: {fileID: 871539308539187311, guid: 15b88f170d97cb74d9204312eceed27d,
+        NumberOfCells: 1000
+        Prefab: {fileID: 1598637203834845707, guid: 16a29c0bbae64d640bae5d287b430b51,
           type: 3}
     - rid: 5594738889444556802
       type: {class: CellConfigurationMono, ns: , asm: Assembly-CSharp}
       data:
         Id: 3
-        NumberOfCells: 200
-        Prefab: {fileID: 871539308539187311, guid: db3ed7157b18c304280f8f19a8a9d298,
+        NumberOfCells: 1000
+        Prefab: {fileID: 1598637203834845707, guid: 87e11e44124b19544ada636d445318bd,
           type: 3}
     - rid: 5594739016417411072
       type: {class: CellConfigurationMono, ns: , asm: Assembly-CSharp}
       data:
         Id: 4
-        NumberOfCells: 0
-        Prefab: {fileID: 871539308539187311, guid: 90e25f341b3d23c438d54516819bf732,
+        NumberOfCells: 1000
+        Prefab: {fileID: 1598637203834845707, guid: 6bea70172b8b1d9458d25aad9046163b,
           type: 3}
 --- !u!4 &1750367394
 Transform:
