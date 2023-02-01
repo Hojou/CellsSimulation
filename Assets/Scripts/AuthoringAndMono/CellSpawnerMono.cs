@@ -12,6 +12,7 @@ using Unity.Burst.Intrinsics;
 public class CellConfigurationMono
 {
     public int Id;
+    public string Name;
     public int NumberOfCells;
     public GameObject Prefab;
 }
@@ -28,6 +29,7 @@ public class CellSpawnerMono : MonoBehaviour
 {
     public float2 Dimension;
     public float Speed;
+    public float Strength;
     public uint RandomSeed;
     public float Scale;
     [SerializeReference]
@@ -43,6 +45,7 @@ public class CellSpawnerBaker : Baker<CellSpawnerMono>
         {
             Id = a.Id,
             NumberOfCells = a.NumberOfCells,
+            Name = a.Name,
             Prefab = GetEntity(a.Prefab)
         }).ToArray();
         var propsBuffer = AddBuffer<CellConfigurationProperties>();
@@ -61,6 +64,7 @@ public class CellSpawnerBaker : Baker<CellSpawnerMono>
         {
             Dimension = authoring.Dimension,
             Speed = authoring.Speed,
+            Strength = authoring.Strength,
             Scale = authoring.Scale,
         });
 

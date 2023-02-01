@@ -9,8 +9,8 @@ using Unity.Transforms;
 public partial struct ApplyRulesSystem : ISystem, ISystemStartStop
 {
     private EntityQuery _jobQuery;
-    private EntityQuery _matchQuery;
     private NativeList<SharedRulesGrouping> _uniqueCellTypes;
+    private float Strength;
 
     [BurstCompile]
     public void OnCreate(ref SystemState state)
@@ -23,7 +23,6 @@ public partial struct ApplyRulesSystem : ISystem, ISystemStartStop
                         .WithAll<LocalTransform>()
                         ;
         _jobQuery = state.GetEntityQuery(queryBuilder);
-        _matchQuery = state.GetEntityQuery(queryBuilder);
     }
 
     [BurstCompile]
@@ -31,12 +30,16 @@ public partial struct ApplyRulesSystem : ISystem, ISystemStartStop
     {
     }
 
+    [BurstCompile]
     public void OnStartRunning(ref SystemState state)
     {
         state.EntityManager.GetAllUniqueSharedComponents(out NativeList<SharedRulesGrouping> uniqueCellRuleTypes, Allocator.Persistent);
         this._uniqueCellTypes = uniqueCellRuleTypes;
+        var properties = SystemAPI.GetSingletonEntity<WorldProperties>();
+        Strength = SystemAPI.GetComponent<WorldProperties>(properties).Strength;
     }
 
+    [BurstCompile]
     public void OnStopRunning(ref SystemState state)
     {
     }
@@ -44,15 +47,12 @@ public partial struct ApplyRulesSystem : ISystem, ISystemStartStop
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        var handle = state.Dependency;
-
-        float deltaTime = math.min(0.05f, SystemAPI.Time.DeltaTime);
         var cellProperties = _jobQuery.ToComponentDataArray<CellProperties>(Allocator.TempJob); 
         var cellLocations = _jobQuery.ToComponentDataArray<LocalTransform>(Allocator.TempJob);
+        var strength = SystemAPI.GetSingleton<WorldProperties>().Strength;
 
         foreach (var cellType in _uniqueCellTypes)
         {
-            //UnityEngine.Debug.Log("uniqueCellType " + cellType.Group);
             _jobQuery.AddSharedComponentFilter(cellType);
 
             var cellCount = _jobQuery.CalculateEntityCount();
@@ -62,31 +62,24 @@ public partial struct ApplyRulesSystem : ISystem, ISystemStartStop
                 continue;
             }
 
-            var rulesMap = new NativeHashMap<int, float>(cellType.Rules.Length, Allocator.TempJob);
-            foreach (var rule in cellType.Rules)
-            {
-                rulesMap.Add(rule.Id, rule.Amount);
-            }
-
             var job = new ApplyRuleJob
             {
-                DeltaTime = deltaTime,
                 CellPositions = cellLocations,
                 CellProperties = cellProperties,
-                Rules = rulesMap,
+                Rules = cellType.Rules,
+                Strength = strength
             };
-            handle = job.ScheduleParallel(_jobQuery, handle);
+            job.ScheduleParallel(_jobQuery);
 
             _jobQuery.ResetFilter();
         }
-        state.Dependency = handle;
     }
 }
 
 [BurstCompile]
 public partial struct ApplyRuleJob: IJobEntity
 {
-    public float DeltaTime;
+    public float Strength;
     [ReadOnly] public NativeArray<LocalTransform> CellPositions;
     [ReadOnly] public NativeArray<CellProperties> CellProperties;
     [ReadOnly] public NativeHashMap<int, float> Rules;
@@ -95,17 +88,23 @@ public partial struct ApplyRuleJob: IJobEntity
         var pos = aspect.LocalPosition;
         var length = CellPositions.Length;
         var velocityChange = float3.zero;
+        var oldId = 0;
+        var amount = 0f;
         for (int i = 0; i < length; i++)
         {
             var otherId = CellProperties[i].Id;
-            if (!Rules.TryGetValue(otherId, out float amount)) continue;
+            if (otherId != oldId)
+            {
+                if (!Rules.TryGetValue(otherId, out amount)) continue;
+                oldId = otherId;
+            }
             var otherPos = CellPositions[i].Position;
             var dx = pos.x - otherPos.x;
             var dz = pos.z - otherPos.z;
             var dist = math.sqrt(dx * dx + dz * dz);
             if (dist > 0 && dist < 1.6f)
             {
-                var force = amount / dist;
+                var force = (Strength * amount) / dist;
                 velocityChange += force * new float3(dx, 0, dz);
             }
         }

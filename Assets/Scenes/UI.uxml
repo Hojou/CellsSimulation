@@ -1,0 +1,9 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:Slider picking-mode="Ignore" label="Speed" value="42" high-value="100" name="Speed" />
+    <ui:Slider picking-mode="Ignore" label="Strength" value="42" high-value="100" name="Strength" />
+    <ui:VisualElement style="flex-grow: 0; background-color: rgba(0, 0, 0, 0);">
+        <ui:Button text="Add Celltype" display-tooltip-when-elided="true" name="AddButton" />
+    </ui:VisualElement>
+    <ui:VisualElement name="CellConfigurations" style="flex-grow: 1; background-color: rgba(0, 0, 0, 0); color: rgb(255, 253, 179);" />
+    <CellPropertySettings name="CP" />
+</ui:UXML>

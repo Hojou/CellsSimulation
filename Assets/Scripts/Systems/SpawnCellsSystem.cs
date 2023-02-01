@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -8,7 +9,7 @@ using Unity.Transforms;
 public struct SharedRulesGrouping : ISharedComponentData
 {
     public int Group;
-    public NativeArray<RuleAmount> Rules;
+    public NativeHashMap<int, float> Rules;
 }
 
 //public struct SharedRulesForGrouping : ISharedComponentData
@@ -44,18 +45,9 @@ public partial struct SpawnCellsSystem : ISystem
         var buffer = SystemAPI.GetBuffer<CellConfigurationProperties>(properties);
         var ecb = new EntityCommandBuffer(Allocator.Temp);
 
-        foreach (var property in buffer) {
-            var rules = new NativeList<RuleAmount>(Allocator.Temp);
-            foreach (var rule in aspect.cellRules)
-            {
-                if (rule.Id1 != property.Id) continue;
-                rules.Add(new RuleAmount {  Id = rule.Id2, Amount = rule.Amount });
-            }
-            var rulesComponent = new SharedRulesGrouping
-            {
-                Group = property.Id,
-                Rules = rules.ToArray(Allocator.Persistent)
-            };
+        foreach (var property in buffer)
+        {
+            SharedRulesGrouping rulesComponent = CreateRulesComponent(ref aspect, property);
 
             for (int i = 0; i < property.NumberOfCells; i++)
             {
@@ -67,24 +59,39 @@ public partial struct SpawnCellsSystem : ISystem
                     Scale = aspect.Scale
                 });
 
-                ecb.AddComponent(cell, new CellProperties {  
+                ecb.AddComponent(cell, new CellProperties
+                {
                     Id = property.Id,
                     Velocity = new float3(0, 0, 0),
                 });
 
                 ecb.AddSharedComponent(cell, rulesComponent);
-                //foreach (var rule in aspect.cellRules) // TODO: Not using this?
-                //{
-                //    if (rule.Id2 != property.Id) continue;  
-                //    var groupFor = new SharedRulesForGrouping {  GroupFor = rule.Id1 };
-                //    ecb.AddSharedComponent(cell, groupFor);
-                //}
 
                 ecb.AddBuffer<VelocityChange>(cell);
             }
         }
 
+        //var floorEntity = SystemAPI.GetSingletonEntity<FloorTag>();
+        //var floor = SystemAPI.GetAspectRW<TransformAspect>(floorEntity);
+        //floor.LocalTransform.
+
         //buffer.Clear();
         ecb.Playback(state.EntityManager);
-    } 
+    }
+
+    private static SharedRulesGrouping CreateRulesComponent(ref WorldPropertiesAspect aspect, CellConfigurationProperties property)
+    {
+        var rules = new NativeHashMap<int, float>(aspect.cellRules.Length, Allocator.Persistent);
+        foreach (var rule in aspect.cellRules)
+        {
+            if (rule.Id1 != property.Id) continue;
+            rules.Add(rule.Id2, rule.Amount);
+        }
+        var rulesComponent = new SharedRulesGrouping
+        {
+            Group = property.Id,
+            Rules = rules
+        };
+        return rulesComponent;
+    }
 }

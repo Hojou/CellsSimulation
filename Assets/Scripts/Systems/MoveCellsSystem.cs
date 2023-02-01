@@ -1,12 +1,10 @@
 using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
-using Unity.Transforms;
-using UnityEngine;
 
 [BurstCompile]
 [UpdateAfter(typeof(ApplyRulesSystem))]
-public partial struct MoveCellsSystem : ISystem
+public partial struct MoveCellsSystem : ISystem, ISystemStartStop
 {
     [BurstCompile]
     public void OnCreate(ref SystemState state)
@@ -20,23 +18,33 @@ public partial struct MoveCellsSystem : ISystem
     }
 
     [BurstCompile]
+    public void OnStartRunning(ref SystemState state)
+    {
+        //var properties = SystemAPI.GetSingletonEntity<WorldProperties>();
+        //var aspect = SystemAPI.GetAspectRW<WorldPropertiesAspect>(properties);
+    }
+
+    [BurstCompile]
+    public void OnStopRunning(ref SystemState state)
+    {
+    }
+
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        var properties = SystemAPI.GetSingletonEntity<WorldProperties>();
-        var aspect = SystemAPI.GetAspectRW<WorldPropertiesAspect>(properties);
-        var dimensions = aspect.Dimensions;
         var deltaTime = math.min(0.05f, SystemAPI.Time.DeltaTime);
+        var worlProperties = SystemAPI.GetSingleton<WorldProperties>();
+        var dimension = worlProperties.Dimension;
+        UnityEngine.Debug.Log($"Dimensions: {dimension.x},{dimension.y}");
 
-        var handle = new MoveCellJob
+        new MoveCellJob
         {
-            DeltaTime = deltaTime * aspect.Speed,
-            MinX = -(dimensions.x / 2),
-            MaxX = (dimensions.x / 2),
-            MinY = -(dimensions.y / 2),
-            MaxY= (dimensions.y / 2),
-        }.ScheduleParallel(state.Dependency);
-
-        state.Dependency = handle;
+            DeltaTime = deltaTime * worlProperties.Speed,
+            MinX = -(dimension.x / 2),
+            MaxX = (dimension.x / 2),
+            MinY = -(dimension.y / 2),
+            MaxY= (dimension.y / 2),
+        }.ScheduleParallel();
     }
 }
 
@@ -53,23 +61,23 @@ public partial struct MoveCellJob: IJobEntity
         var velocity = aspect.Velocity;
         float3 newPos = aspect.LocalPosition + velocity * DeltaTime;
 
-        bool flipX = newPos.x <= -5f || newPos.x >= 5f;
-        bool flipZ = newPos.z <= -5f || newPos.z >= 5f;
+        bool flipX = newPos.x <= MinX || newPos.x >= MaxX;
+        bool flipZ = newPos.z <= MinY || newPos.z >= MaxY;
 
         if (flipX || flipZ)
         {
             velocity = new float3(
-                flipX ? -velocity.x * 1: velocity.x,
+                flipX ? -velocity.x : velocity.x,
                 0,
-                flipZ ? -velocity.z * 1: velocity.z
+                flipZ ? -velocity.z : velocity.z
             );
             aspect.Velocity = velocity;
-
-            if (flipX) newPos.x = math.clamp(newPos.x, -5, 5);
-            if (flipZ) newPos.z = math.clamp(newPos.z, -5, 5);
+            newPos = aspect.LocalPosition + velocity * DeltaTime;
         }
 
-        aspect.LocalPosition = aspect.LocalPosition + velocity * DeltaTime;
+        newPos.x = math.clamp(newPos.x, MinX, MaxX);
+        newPos.y = math.clamp(newPos.y, MinY, MaxY);
+        aspect.LocalPosition = newPos;
     }
 
 }
