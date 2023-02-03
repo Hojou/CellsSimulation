@@ -1,6 +1,6 @@
 ﻿using System;
 
-public class SyncableValueHolder<T> where T : IEquatable<T>
+public class SyncableValueHolder<T>
 {
     private T _value;
     private bool _isSynced;
@@ -13,15 +13,23 @@ public class SyncableValueHolder<T> where T : IEquatable<T>
 
     public void SetValue(T newValue)
     {
-        if (_value.Equals(newValue)) return;
+        //if (_value.Equals(newValue)) return;
         UpdateValue(newValue);
     }
 
-    public void SyncValue(ref T r)
+    //public bool SyncValue()
+    //{
+    //    var wasSynced = _isSynced;
+    //    _isSynced = true;
+    //    return wasSynced;
+    //}
+
+    public bool SyncValue(ref T r)
     {
-        if (_isSynced) return;
+        if (_isSynced) return false;
         r = _value;
         _isSynced = true;
+        return true;
     }
 
     private void UpdateValue(T newValue)

@@ -1,9 +1,14 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <ui:Slider picking-mode="Ignore" label="Speed" value="42" high-value="100" name="Speed" />
-    <ui:Slider picking-mode="Ignore" label="Strength" value="42" high-value="100" name="Strength" />
-    <ui:VisualElement style="flex-grow: 0; background-color: rgba(0, 0, 0, 0);">
-        <ui:Button text="Add Celltype" display-tooltip-when-elided="true" name="AddButton" />
-    </ui:VisualElement>
-    <ui:VisualElement name="CellConfigurations" style="flex-grow: 1; background-color: rgba(0, 0, 0, 0); color: rgb(255, 253, 179);" />
-    <CellPropertySettings name="CP" />
+    <Style src="project://database/Assets/UI%20Toolkit/Components/Resources/CellPropertySettings.uss?fileID=7433441132597879392&amp;guid=980ccb6f9f573bd40ba37c5107f5a48b&amp;type=3#CellPropertySettings" />
+    <ui:ScrollView style="width: 450px; height: auto;">
+        <ui:Slider picking-mode="Ignore" label="Speed" value="42" high-value="300" name="Speed" inverted="false" show-input-field="true" />
+        <ui:Slider picking-mode="Ignore" label="Strength" value="42" high-value="300" name="Strength" show-input-field="true" />
+        <ui:VisualElement name="Buttons" style="flex-grow: 0; display: flex; font-size: 12px; flex-direction: row;">
+            <ui:Button text="Add Celltype" display-tooltip-when-elided="true" name="AddButton" />
+            <ui:Button text="Reset Simulation" display-tooltip-when-elided="true" name="ResetButton" />
+        </ui:VisualElement>
+        <ui:VisualElement name="CellConfigurations" style="flex-grow: 1; background-color: rgba(0, 0, 0, 0); color: rgb(255, 253, 179); display: flex;">
+            <CellPropertySettings />
+        </ui:VisualElement>
+    </ui:ScrollView>
 </ui:UXML>

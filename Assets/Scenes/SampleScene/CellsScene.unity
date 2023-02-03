@@ -227,7 +227,7 @@ MonoBehaviour:
       data:
         Id: 4
         Name: Blue
-        NumberOfCells: 0
+        NumberOfCells: 1000
         Prefab: {fileID: 1598637203834845707, guid: 6bea70172b8b1d9458d25aad9046163b,
           type: 3}
 --- !u!4 &1750367394

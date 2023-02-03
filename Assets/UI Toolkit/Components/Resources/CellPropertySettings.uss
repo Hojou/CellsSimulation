@@ -1,0 +1,72 @@
+.unity-slider {
+    color: rgb(255, 255, 255);
+    -unity-font-style: bold;
+    font-size: 12px;
+}
+
+.unity-base-slider {
+    background-image: url('project://database/Packages/com.unity.timeline/Editor/StyleSheets/Images/DarkSkin/TimelineInfiniteTrackNoShadow.png?fileID=2800000&guid=eae63adb172f1164db61a7f4bdfc3637&type=3#TimelineInfiniteTrackNoShadow');
+    font-size: 12px;
+    align-self: stretch;
+}
+
+.unity-base-field__label {
+    min-width: 80px;
+}
+
+#unity-text-input {
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-left: 4px;
+    padding-right: 4px;
+    padding-top: 0;
+    padding-bottom: 0;
+    -unity-background-image-tint-color: rgb(0, 0, 0);
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.unity-text-field {
+    height: 16px;
+    -unity-text-align: upper-left;
+}
+
+.unity-text-field Label.unity-label {
+    height: 16px;
+    align-self: auto;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.close-button {
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-left: 2px;
+    padding-right: 2px;
+    padding-top: 0;
+    padding-bottom: 0;
+    font-size: 10px;
+    -unity-text-align: upper-right;
+    align-items: auto;
+    justify-content: flex-start;
+    align-self: center;
+}
+
+.unity-base-slider__text-field {
+    align-self: center;
+}
+
+.cell-counter {
+    -unity-background-image-tint-color: rgb(0, 0, 0);
+    background-color: rgba(255, 255, 255, 0);
+    background-image: url('project://database/Packages/com.unity.entities/Unity.Scenes.Editor.Tests/Assets/TestTexture.asset?fileID=2800000&guid=d52bd2787bc5f5d408f93a562e50feed&type=2#TestTexture');
+}
