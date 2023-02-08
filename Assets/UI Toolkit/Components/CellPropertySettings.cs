@@ -81,19 +81,21 @@ public class CellPropertySettings : VisualElement
 
     public void Init(Rule cell, IEnumerable<Rule> rules)
     {
-        _cellInput.SetValueWithoutNotify(Math.Floor(cell.Value).ToString());
+        var countValue = Math.Floor(cell.Value);
+        _cellInput.SetValueWithoutNotify(countValue.ToString());
         _cellInput.label = cell.Label;
 
         _rulesContainer.Clear();
         foreach (var rule in rules)
         {
+            UnityEngine.Debug.Log($"Cell {cell.Label}. vs {rule.Label}({rule.Id}): {rule.Value}");
             var slider = new Slider();
+            slider.lowValue = -3f;
+            slider.highValue = 3f;
             slider.label = rule.Label;
             slider.value = rule.Value;
             slider.userData = rule.Id;
             slider.showInputField = true;
-            slider.lowValue = -3f;
-            slider.highValue = 3f;
             slider.RegisterValueChangedCallback(evt => onRuleChanged?.Invoke(this, new Rule(rule.Id, evt.newValue)));
             _rulesContainer.Add(slider);
         }

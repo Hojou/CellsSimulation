@@ -7,6 +7,7 @@ using UnityEngine;
 using Random = Unity.Mathematics.Random;
 using System.Linq;
 using Unity.Burst.Intrinsics;
+using Unity.Collections;
 
 [Serializable]
 public class CellConfigurationMono
@@ -37,7 +38,7 @@ public class CellSpawnerMono : MonoBehaviour
     public CellRuleMono[] Rules;
 }
 
-public class CellSpawnerBaker : Baker<CellSpawnerMono>
+public class CellSpawnerBaker : Baker<CellSpawnerMono>, ICellSpawnerBaker
 {
     public override void Bake(CellSpawnerMono authoring)
     {
@@ -51,14 +52,26 @@ public class CellSpawnerBaker : Baker<CellSpawnerMono>
         var propsBuffer = AddBuffer<CellConfigurationProperties>();
         propsBuffer.CopyFrom(cells);
 
-        var rules = authoring.Rules.Select(rule => new CellRule
+        var tempRules = authoring.Rules.Select(rule => new CellRule
         {
             Id1 = rule.Id1,
             Id2 = rule.Id2,
             Amount = rule.Amount,
         }).ToArray();
         var rulesBuffer = AddBuffer<CellRule>();
-        rulesBuffer.CopyFrom(rules);
+        rulesBuffer.CopyFrom(tempRules);
+
+        //var lookup = authoring.Rules.ToLookup(r => r.Id1);
+        //var rules = new NativeHashMap<int, NativeHashMap<int, float>>(cells.Length, Allocator.Persistent);
+        //foreach (var group in lookup)
+        //{
+        //    var innerMap = new NativeHashMap<int, float>(group.Count(), Allocator.Persistent);
+        //    foreach (var g in group)
+        //    {
+        //        innerMap.TryAdd(g.Id2, g.Amount);
+        //    }
+        //    rules.TryAdd(group.Key, innerMap);
+        //}
 
         AddComponent(new WorldProperties
         {
@@ -66,6 +79,7 @@ public class CellSpawnerBaker : Baker<CellSpawnerMono>
             Speed = authoring.Speed,
             Strength = authoring.Strength,
             Scale = authoring.Scale,
+            //Rules = rules
         });
 
         AddComponent(new CellRandom { Value = Random.CreateFromIndex(authoring.RandomSeed) });

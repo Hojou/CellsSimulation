@@ -35,7 +35,7 @@ public partial struct MoveCellsSystem : ISystem, ISystemStartStop
         var deltaTime = math.min(0.05f, SystemAPI.Time.DeltaTime);
         var worlProperties = SystemAPI.GetSingleton<WorldProperties>();
         var dimension = worlProperties.Dimension;
-        UnityEngine.Debug.Log($"Dimensions: {dimension.x},{dimension.y}");
+        //UnityEngine.Debug.Log($"Dimensions: {dimension.x},{dimension.y}");
 
         new MoveCellJob
         {

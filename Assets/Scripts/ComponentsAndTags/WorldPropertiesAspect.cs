@@ -52,4 +52,24 @@ public readonly partial struct WorldPropertiesAspect : IAspect
         }
         return list.AsArray();
     }
+
+    public void SetRules(int cellId, NativeArray<CellRule> rules)
+    {
+        //EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+        //var brules = entityManager.GetBuffer<CellRule>(Entity);
+        //brules.
+        for (int i = 0; i < cellRules.Length; i++)
+        {   
+            var rule = cellRules[i];
+            if (rule.Id1 == cellId)
+            {
+                foreach (var data in rules)
+                {
+                    if (data.Id2 != rule.Id2) continue;
+                    rule.Amount = data.Amount;
+                    UnityEngine.Debug.Log($"{cellId},{rule.Id2}:{rule.Amount}");
+                }
+            }
+        }
+    }
 }

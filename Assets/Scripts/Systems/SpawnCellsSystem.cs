@@ -9,7 +9,7 @@ using Unity.Transforms;
 public struct SharedRulesGrouping : ISharedComponentData
 {
     public int Group;
-    public NativeHashMap<int, float> Rules;
+    //public NativeHashMap<int, float> Rules;
 }
 
 //public struct SharedRulesForGrouping : ISharedComponentData
@@ -47,7 +47,7 @@ public partial struct SpawnCellsSystem : ISystem
 
         foreach (var property in buffer)
         {
-            SharedRulesGrouping rulesComponent = CreateRulesComponent(ref aspect, property);
+            SharedRulesGrouping rulesComponent = new SharedRulesGrouping { Group = property.Id };  // CreateRulesComponent(ref aspect, property);
 
             for (int i = 0; i < property.NumberOfCells; i++)
             {
@@ -71,10 +71,6 @@ public partial struct SpawnCellsSystem : ISystem
             }
         }
 
-        //var floorEntity = SystemAPI.GetSingletonEntity<FloorTag>();
-        //var floor = SystemAPI.GetAspectRW<TransformAspect>(floorEntity);
-        //floor.LocalTransform.
-
         //buffer.Clear();
         ecb.Playback(state.EntityManager);
     }
@@ -90,7 +86,7 @@ public partial struct SpawnCellsSystem : ISystem
         var rulesComponent = new SharedRulesGrouping
         {
             Group = property.Id,
-            Rules = rules
+            //Rules = rules
         };
         return rulesComponent;
     }

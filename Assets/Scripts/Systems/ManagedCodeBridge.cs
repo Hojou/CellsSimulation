@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
@@ -15,9 +16,11 @@ public partial class ManagedCodeBridge : SystemBase
     private readonly SyncableValueHolder<float2> _dimension = new SyncableValueHolder<float2>(new float2(5, 5));
     private readonly Dictionary<string, Tuple<sRule, IEnumerable<sRule>>> _rulesToProcess = new Dictionary<string, Tuple<sRule, IEnumerable<sRule>>>();
 
+    EndSimulationEntityCommandBufferSystem m_EndSimulationEcbSystem;
+
     protected override void OnCreate()
     {
-        UnityEngine.Debug.Log("OnCreate");
+        //UnityEngine.Debug.Log("OnCreate");
         RequireForUpdate<WorldProperties>();
         _uiManager = GameObject.FindObjectOfType<UIManager>();
         _uiManager.onSpeedChanged += _speed.SetValue;                                                                                           
@@ -28,13 +31,13 @@ public partial class ManagedCodeBridge : SystemBase
 
     protected override void OnStartRunning()
     {
-        UnityEngine.Debug.Log("InitializeCellConfigurations");
+        //UnityEngine.Debug.Log("InitializeCellConfigurations");
         InitializeCellConfigurations();
     }
 
     private void InitializeCellConfigurations()
     {
-        UnityEngine.Debug.Log("Initialize");
+        //UnityEngine.Debug.Log("Initialize");
         _rulesToProcess.Clear();
 
         var entity = SystemAPI.GetSingletonEntity<WorldProperties>();
@@ -56,10 +59,11 @@ public partial class ManagedCodeBridge : SystemBase
             foreach (var rule in rules)
             {
                 if (rule.Id1 != config.Id) continue;
-                var vsName = cellConfigurations.First(r => r.Id == rule.Id2).Name;
+                var vsName = cellConfigurations.Single(r => r.Id == rule.Id2).Name;
+                //UnityEngine.Debug.Log($"Rule Id{rule.Id1}: vs {rule.Id2}({vsName}), value:{rule.Amount}");
                 cellRules.Add(new sRule
                 {
-                    Id = rule.Id1.ToString(),
+                    Id = rule.Id2.ToString(),
                     Label = $"vs {vsName}",
                     Value = rule.Amount
                 });
@@ -71,28 +75,40 @@ public partial class ManagedCodeBridge : SystemBase
 
     protected override void OnUpdate()
     {
-        UnityEngine.Debug.Log("OnUpdate");
+        //UnityEngine.Debug.Log("OnUpdate");
         var properties = SystemAPI.GetSingletonRW<WorldProperties>();
         _speed.SyncValue(ref properties.ValueRW.Speed);
         _strength.SyncValue(ref properties.ValueRW.Strength);
         _dimension.SyncValue(ref properties.ValueRW.Dimension);
+
         if (_rulesToProcess.Any())
         {
-            UpdateRules();
+            Debug.Log("Rules to process " + _rulesToProcess.Count());
+            var first = _rulesToProcess.First();
+            var (cell, rules) = first.Value;
+            UpdateRules(cell, rules);
+            _rulesToProcess.Remove(first.Key);
         }
     }
 
-    private void UpdateRules()
+    private void UpdateRules(sRule cell, IEnumerable<sRule> rules)
     {
-        //var entity = SystemAPI.GetSingletonEntity<WorldProperties>();
-        //SystemAPI.GetAspectRW<WorldPropertiesAspect>(entity);
+        int cellId = int.Parse(cell.Id);
+        var nativeRules = new NativeArray<CellRule>(rules.Count(), Allocator.TempJob);
+        nativeRules.CopyFrom(rules.Select(r => new CellRule
+        {
+            Id1 = cellId,
+            Id2 = int.TryParse(r.Id, out int otherId) ? otherId : -1,
+            Amount = r.Value
+        }).ToArray());
 
-        Debug.Log("Rules to process " + _rulesToProcess.Count());
-        var (cell, rules) = _rulesToProcess.First().Value;
-        var firstRule = rules.First();
-        Debug.Log($"Cell:{cell.Id}={cell.Value}. rule value: {firstRule.Value}");
-        _rulesToProcess.Clear();
+        var worldEntity = SystemAPI.GetSingletonEntity<WorldProperties>();
+        var rulesBuffer = SystemAPI.GetBuffer<CellRule>(worldEntity);
+        rulesBuffer.AddRange(nativeRules);
 
+
+        //var aspect = SystemAPI.GetAspectRW<WorldPropertiesAspect>(worldEntity);
+        //aspect.SetRules(cellId, nativeRules);
         //_uiManager.
     }
 }

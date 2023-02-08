@@ -1,8 +1,11 @@
+using Sirenix.Serialization;
+using System;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
+using UnityEditor.PackageManager;
 
 [BurstCompile]
 [UpdateInGroup(typeof(SimulationSystemGroup))]
@@ -10,7 +13,7 @@ public partial struct ApplyRulesSystem : ISystem, ISystemStartStop
 {
     private EntityQuery _jobQuery;
     private NativeList<SharedRulesGrouping> _uniqueCellTypes;
-    private float Strength;
+    private NativeHashMap<int, NativeHashMap<int, float>> _rules;
 
     [BurstCompile]
     public void OnCreate(ref SystemState state)
@@ -23,6 +26,7 @@ public partial struct ApplyRulesSystem : ISystem, ISystemStartStop
                         .WithAll<LocalTransform>()
                         ;
         _jobQuery = state.GetEntityQuery(queryBuilder);
+        _rules = new NativeHashMap<int, NativeHashMap<int, float>>(32, Allocator.Persistent);
     }
 
     [BurstCompile]
@@ -35,8 +39,8 @@ public partial struct ApplyRulesSystem : ISystem, ISystemStartStop
     {
         state.EntityManager.GetAllUniqueSharedComponents(out NativeList<SharedRulesGrouping> uniqueCellRuleTypes, Allocator.Persistent);
         this._uniqueCellTypes = uniqueCellRuleTypes;
-        var properties = SystemAPI.GetSingletonEntity<WorldProperties>();
-        Strength = SystemAPI.GetComponent<WorldProperties>(properties).Strength;
+        //var properties = SystemAPI.GetSingletonEntity<WorldProperties>();
+        //Strength = SystemAPI.GetComponent<WorldProperties>(properties).Strength;
     }
 
     [BurstCompile]
@@ -49,14 +53,21 @@ public partial struct ApplyRulesSystem : ISystem, ISystemStartStop
     {
         var cellProperties = _jobQuery.ToComponentDataArray<CellProperties>(Allocator.TempJob); 
         var cellLocations = _jobQuery.ToComponentDataArray<LocalTransform>(Allocator.TempJob);
-        var strength = SystemAPI.GetSingleton<WorldProperties>().Strength;
+        var worldEntity = SystemAPI.GetSingletonEntity<WorldProperties>();
+        var props = SystemAPI.GetComponent<WorldProperties>(worldEntity); // .GetSingleton<WorldProperties>();
+
+        var rulesBuffer = SystemAPI.GetBuffer<CellRule>(worldEntity);
+        if (!rulesBuffer.IsEmpty)
+        {
+            UpdateRules(rulesBuffer, worldEntity);
+        }
 
         foreach (var cellType in _uniqueCellTypes)
         {
             _jobQuery.AddSharedComponentFilter(cellType);
 
-            var cellCount = _jobQuery.CalculateEntityCount();
-            if (cellCount == 0)
+            var cellCount = _jobQuery.CalculateEntityCount();           
+            if (cellCount == 0 || !_rules.TryGetValue(cellType.Group, out var rules))
             {
                 _jobQuery.ResetFilter();
                 continue;
@@ -66,13 +77,89 @@ public partial struct ApplyRulesSystem : ISystem, ISystemStartStop
             {
                 CellPositions = cellLocations,
                 CellProperties = cellProperties,
-                Rules = cellType.Rules,
-                Strength = strength
+                Rules = rules,
+                Strength = props.Strength
             };
             job.ScheduleParallel(_jobQuery);
 
             _jobQuery.ResetFilter();
         }
+    }
+
+    private void UpdateRules(DynamicBuffer<CellRule> rulesBuffer, Entity worldEntity)
+    {
+        //UnityEngine.Debug.Log("Updating rules! Count:" + rulesBuffer.Length.ToString());
+        var ecb = new EntityCommandBuffer(Allocator.Temp);
+
+        foreach (var rule in rulesBuffer)
+        {
+            var Id1 = rule.Id1;
+            var Id2 = rule.Id2;
+            var Amount = rule.Amount;
+
+            if (!_rules.TryGetValue(Id1, out var rules))
+            {
+                rules = new NativeHashMap<int, float>(32, Allocator.Persistent);
+                _rules.TryAdd(Id1, rules);
+            }
+
+            if (Amount == 0)
+            {
+                _rules.Remove(Id2);
+            } else if (rules.ContainsKey(Id2))
+            {
+                rules[Id2] = Amount;
+            }
+            else
+            {
+                rules.Add(Id2, Amount);
+            }
+        }
+
+        rulesBuffer.Clear();
+        ecb.SetBuffer<CellRule>(worldEntity);
+
+
+        //foreach (var property in rulesBuffer)
+        //{
+        //    //SharedRulesGrouping rulesComponent = new SharedRulesGrouping { Group = property.Id };  // CreateRulesComponent(ref aspect, property);
+
+        //    for (int i = 0; i < property.NumberOfCells; i++)
+        //    {
+        //        var cell = ecb.Instantiate(property.Prefab);
+        //        ecb.SetComponent(cell, new LocalTransform
+        //        {
+        //            Position = aspect.GetRandomPosition(),
+        //            Rotation = quaternion.identity,
+        //            Scale = aspect.Scale
+        //        });
+
+        //        ecb.AddComponent(cell, new CellProperties
+        //        {
+        //            Id = property.Id,
+        //            Velocity = new float3(0, 0, 0),
+        //        });
+
+        //        ecb.AddSharedComponent(cell, rulesComponent);
+
+        //        ecb.AddBuffer<VelocityChange>(cell);
+        //    }
+        //}
+    }
+
+    private void BuildRules()
+    {
+        //var lookup = authoring.Rules.ToLookup(r => r.Id1);
+        //var rules = new NativeHashMap<int, NativeHashMap<int, float>>(cells.Length, Allocator.Persistent);
+        //foreach (var group in lookup)
+        //{
+        //    var innerMap = new NativeHashMap<int, float>(group.Count(), Allocator.Persistent);
+        //    foreach (var g in group)
+        //    {
+        //        innerMap.TryAdd(g.Id2, g.Amount);
+        //    }
+        //    rules.TryAdd(group.Key, innerMap);
+        //}
     }
 }
 
