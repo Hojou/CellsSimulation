@@ -9,26 +9,24 @@ using Unity.Transforms;
 public struct SharedRulesGrouping : ISharedComponentData
 {
     public int Group;
-    //public NativeHashMap<int, float> Rules;
 }
-
-//public struct SharedRulesForGrouping : ISharedComponentData
-//{
-//    public int GroupFor;
-//    public float Amount;
-//}
-
-[Serializable]
-public struct RuleAmount { public int Id; public float Amount; }
 
 [BurstCompile]
 [UpdateInGroup(typeof(InitializationSystemGroup))]
 public partial struct SpawnCellsSystem : ISystem
 {
+    private EntityQuery _jobQuery;
+
     [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<WorldProperties>();
+        using var queryBuilder = new EntityQueryBuilder(Allocator.Temp)
+                .WithAll<CellProperties>()
+                .WithAll<SharedRulesGrouping>()
+                .WithAll<LocalTransform>()
+                ;
+        _jobQuery = state.GetEntityQuery(queryBuilder);
     }
 
     [BurstCompile]
@@ -39,55 +37,91 @@ public partial struct SpawnCellsSystem : ISystem
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        state.Enabled = false;
-        var properties = SystemAPI.GetSingletonEntity<WorldProperties>();
-        var aspect = SystemAPI.GetAspectRW<WorldPropertiesAspect>(properties);
-        var buffer = SystemAPI.GetBuffer<CellConfigurationProperties>(properties);
-        var ecb = new EntityCommandBuffer(Allocator.Temp);
+        var worldEntity = SystemAPI.GetSingletonEntity<WorldProperties>();
 
-        foreach (var property in buffer)
+        var cellsBuffer = SystemAPI.GetBuffer<CellConfigurationProperties>(worldEntity);
+        if (!cellsBuffer.IsEmpty)
         {
-            SharedRulesGrouping rulesComponent = new SharedRulesGrouping { Group = property.Id };  // CreateRulesComponent(ref aspect, property);
+            UnityEngine.Debug.Log($"CellsBuffer: {cellsBuffer.Length}");
+            UpdateCellCount(cellsBuffer, worldEntity, state);
+        }
 
-            for (int i = 0; i < property.NumberOfCells; i++)
-            {
-                var cell = ecb.Instantiate(property.Prefab);
-                ecb.SetComponent(cell, new LocalTransform
+        var rulesBuffer = SystemAPI.GetBuffer<CellRule>(worldEntity);
+        if (!rulesBuffer.IsEmpty)
+        {
+            UnityEngine.Debug.Log($"RulesBuffer: {rulesBuffer.Length}");
+            UpdateRules(rulesBuffer, worldEntity, state);
+        }
+    }
+
+    private void UpdateCellCount(DynamicBuffer<CellConfigurationProperties> cellsBuffer, Entity worldEntity, SystemState state)
+    {
+        var ecb = new EntityCommandBuffer(Allocator.Temp);
+        var aspect = SystemAPI.GetAspectRW<WorldPropertiesAspect>(worldEntity);
+
+        foreach (var rule in cellsBuffer)
+        {
+            var desiredCount = rule.NumberOfCells;
+            var rulesComponent = new SharedRulesGrouping { Group = rule.Id };
+            _jobQuery.ResetFilter();
+            _jobQuery.SetSharedComponentFilter(rulesComponent);
+            int currentCount = _jobQuery.CalculateEntityCount();
+            int difference = desiredCount - currentCount;
+
+            if (difference > 0)
+            {   // Add more
+                UnityEngine.Debug.Log($"Adding more {difference}");
+                for (int i = 0; i < difference; i++)
                 {
-                    Position = aspect.GetRandomPosition(),
-                    Rotation = quaternion.identity,
-                    Scale = aspect.Scale
-                });
+                    var cell = ecb.Instantiate(rule.Prefab);
+                    ecb.SetComponent(cell, new LocalTransform
+                    {
+                        Position = aspect.GetRandomPosition(),
+                        Rotation = quaternion.identity,
+                        Scale = aspect.Scale
+                    });
 
-                ecb.AddComponent(cell, new CellProperties
+                    ecb.AddComponent(cell, new CellProperties
+                    {
+                        Id = rule.Id,
+                        Velocity = new float3(0, 0, 0),
+                    });
+
+                    ecb.AddSharedComponent(cell, rulesComponent);
+
+                    ecb.AddBuffer<VelocityChange>(cell);
+                }
+            }
+            else
+            {   // Remove entities
+                UnityEngine.Debug.Log($"Removing: {difference}");
+                for (int i = 0; i > difference; i--)
                 {
-                    Id = property.Id,
-                    Velocity = new float3(0, 0, 0),
-                });
-
-                ecb.AddSharedComponent(cell, rulesComponent);
-
-                ecb.AddBuffer<VelocityChange>(cell);
+                    var entity = _jobQuery.GetSingletonEntity();
+                    ecb.DestroyEntity(entity);
+                }
             }
         }
 
-        //buffer.Clear();
+        cellsBuffer.Clear();
+        ecb.SetBuffer<CellConfigurationProperties>(worldEntity);
         ecb.Playback(state.EntityManager);
     }
 
-    private static SharedRulesGrouping CreateRulesComponent(ref WorldPropertiesAspect aspect, CellConfigurationProperties property)
+    private void UpdateRules(DynamicBuffer<CellRule> rulesBuffer, Entity worldEntity, SystemState state)
     {
-        var rules = new NativeHashMap<int, float>(aspect.cellRules.Length, Allocator.Persistent);
-        foreach (var rule in aspect.cellRules)
+        //UnityEngine.Debug.Log("Updating rules! Count:" + rulesBuffer.Length.ToString());
+        var ecb = new EntityCommandBuffer(Allocator.Temp);
+        var rules = SystemAPI.GetSingletonRW<WorldProperties>().ValueRW.Rules;
+        
+        foreach (var rule in rulesBuffer)
         {
-            if (rule.Id1 != property.Id) continue;
-            rules.Add(rule.Id2, rule.Amount);
+            int keyIndex = 32 * rule.Id1 + rule.Id2;
+            rules[keyIndex] = rule.Amount;
         }
-        var rulesComponent = new SharedRulesGrouping
-        {
-            Group = property.Id,
-            //Rules = rules
-        };
-        return rulesComponent;
+
+        rulesBuffer.Clear();
+        ecb.SetBuffer<CellRule>(worldEntity);
+        ecb.Playback(state.EntityManager);
     }
 }

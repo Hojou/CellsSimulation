@@ -163,7 +163,6 @@ MonoBehaviour:
   - rid: 5594738889444556800
   - rid: 5594738889444556801
   - rid: 5594738889444556802
-  - rid: 5594739016417411072
   Rules:
   - Id1: 1
     Id2: 1
@@ -186,15 +185,6 @@ MonoBehaviour:
   - Id1: 3
     Id2: 1
     Amount: -0.2
-  - Id1: 4
-    Id2: 1
-    Amount: 0.5
-  - Id1: 4
-    Id2: 3
-    Amount: -0.49
-  - Id1: 4
-    Id2: 4
-    Amount: -0.7
   references:
     version: 2
     RefIds:
@@ -221,14 +211,6 @@ MonoBehaviour:
         Name: Yellow
         NumberOfCells: 2000
         Prefab: {fileID: 1598637203834845707, guid: 87e11e44124b19544ada636d445318bd,
-          type: 3}
-    - rid: 5594739016417411072
-      type: {class: CellConfigurationMono, ns: , asm: Assembly-CSharp}
-      data:
-        Id: 4
-        Name: Blue
-        NumberOfCells: 1000
-        Prefab: {fileID: 1598637203834845707, guid: 6bea70172b8b1d9458d25aad9046163b,
           type: 3}
 --- !u!4 &1750367394
 Transform:

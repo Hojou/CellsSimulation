@@ -19,22 +19,16 @@ public class CellPropertySettings : VisualElement
     public event Action<CellPropertySettings, int> onCountChanged;
     public event Action<CellPropertySettings> onRemove;
 
-    public CellPropertySettings() : this(new Rule("test", 0), Enumerable.Empty<Rule>())
+    public CellPropertySettings() : this(new CellConfig("test", 0), Enumerable.Empty<Rule>())
     {
-        //var rules = new List<Rule>
-        //{
-        //    new Rule("vs Black", .35f),
-        //    new Rule("vs Red", -1.5f)
-        //};
-        //Init(new Rule("Pink", 1000), rules);
     }
 
-    public CellPropertySettings(Rule cellProperties, IEnumerable<Rule> rules)
+    public CellPropertySettings(CellConfig cellConfig, IEnumerable<Rule> rules)
     {
         styleSheets.Add(Resources.Load<StyleSheet>("CellPropertySettings"));
         
         SetupCellConfiguration();
-        Init(cellProperties, rules);
+        Init(cellConfig, rules);
     }
 
     private void SetupCellConfiguration()
@@ -79,16 +73,16 @@ public class CellPropertySettings : VisualElement
         });
     }
 
-    public void Init(Rule cell, IEnumerable<Rule> rules)
+    public void Init(CellConfig cell, IEnumerable<Rule> rules)
     {
-        var countValue = Math.Floor(cell.Value);
+        var countValue = cell.Count;
         _cellInput.SetValueWithoutNotify(countValue.ToString());
-        _cellInput.label = cell.Label;
+        _cellInput.label = cell.Name;
 
         _rulesContainer.Clear();
         foreach (var rule in rules)
         {
-            UnityEngine.Debug.Log($"Cell {cell.Label}. vs {rule.Label}({rule.Id}): {rule.Value}");
+            //UnityEngine.Debug.Log($"Cell {cell.Label}. vs {rule.Label}({rule.Id}): {rule.Value}");
             var slider = new Slider();
             slider.lowValue = -3f;
             slider.highValue = 3f;
@@ -98,6 +92,18 @@ public class CellPropertySettings : VisualElement
             slider.showInputField = true;
             slider.RegisterValueChangedCallback(evt => onRuleChanged?.Invoke(this, new Rule(rule.Id, evt.newValue)));
             _rulesContainer.Add(slider);
+        }
+    }
+
+    public struct CellConfig
+    {
+        public string Name;
+        public int Count;
+
+        public CellConfig(string Name, int Count)
+        {
+            this.Name = Name;
+            this.Count = Count;
         }
     }
 

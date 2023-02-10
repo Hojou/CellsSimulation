@@ -35,41 +35,35 @@ public readonly partial struct WorldPropertiesAspect : IAspect
 
     public NativeArray<CellConfigurationProperties> CellConfigurations
     {
-        get => cellProperties.ToNativeArray(Allocator.TempJob);
-    }
-
-    public NativeArray<CellRule> CellRules => cellRules.ToNativeArray(Allocator.TempJob);
-
-    public NativeArray<CellRule> GetRulesForConfigId(int Id)
-    {
-        var list = new NativeList<CellRule>(Allocator.Temp);
-        foreach (var rule in cellRules)
+        get
         {
-            if (rule.Id1 == Id)
-            {
-                list.Add(rule);
-            }
+            var em = World.DefaultGameObjectInjectionWorld.EntityManager;
+            em.GetAllUniqueSharedComponents(out NativeList<SharedRulesGrouping> uniqueCellRuleTypes, Allocator.Persistent);
+            //var names = new NativeHashMap<int, FixedString32Bytes>();
+            //names.Add(1, "Green");
+            //names.Add(2, "Red");
+            //names.Add(3, "Yellow");
+            //names.Add(4, "Blue");
+
+
+
+            //var ccp = new CellConfigurationProperties
+            //{
+            //    Id= 0,
+            //    Name = names[0],
+            //    NumberOfCells= 1  
+            //};
+
+
+                return cellProperties.ToNativeArray(Allocator.TempJob);
         }
-        return list.AsArray();
     }
 
-    public void SetRules(int cellId, NativeArray<CellRule> rules)
+    public NativeArray<CellRule> CellRules
     {
-        //EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-        //var brules = entityManager.GetBuffer<CellRule>(Entity);
-        //brules.
-        for (int i = 0; i < cellRules.Length; i++)
-        {   
-            var rule = cellRules[i];
-            if (rule.Id1 == cellId)
-            {
-                foreach (var data in rules)
-                {
-                    if (data.Id2 != rule.Id2) continue;
-                    rule.Amount = data.Amount;
-                    UnityEngine.Debug.Log($"{cellId},{rule.Id2}:{rule.Amount}");
-                }
-            }
+        get
+        {
+            return cellRules.ToNativeArray(Allocator.TempJob);
         }
     }
 }

@@ -435,6 +435,8 @@ MonoBehaviour:
   Dimension:
     x: 0
     y: 0
+  simulationConfigurations:
+  - {fileID: 11400000, guid: 7c8d8a03242d8b5409e6357c6b4060bf, type: 2}
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0

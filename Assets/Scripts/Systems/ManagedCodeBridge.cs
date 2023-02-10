@@ -6,6 +6,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 using sRule = CellPropertySettings.Rule;
+using sConfig = CellPropertySettings.CellConfig;
 
 public partial class ManagedCodeBridge : SystemBase
 {
@@ -48,11 +49,11 @@ public partial class ManagedCodeBridge : SystemBase
 
         foreach (var config in cellConfigurations)
         {
-            var cellConfig = new sRule
+            var cellConfig = new sConfig
             {
-                Id = config.Id.ToString(),
-                Label = config.Name.ToString(),
-                Value = config.NumberOfCells
+                //Id = config.Id.ToString(),
+                Name = config.Name.ToString(),
+                Count = config.NumberOfCells
             };
 
             var cellRules = new List<sRule>();

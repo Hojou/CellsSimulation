@@ -20,6 +20,8 @@ public class UIManager : MonoBehaviour
 
     public event Action<CellPropertySettings.Rule, IEnumerable<CellPropertySettings.Rule>> onRuleChanged;
 
+    public List<SimulationConfigurationSO> simulationConfigurations;
+
     public float Speed
     {
         get => _speed.value; 
@@ -31,6 +33,8 @@ public class UIManager : MonoBehaviour
         get => _strength.value;
         set => _strength.SetValueWithoutNotify(value);
     }
+
+    public 
 
     void Start()
     {
@@ -82,11 +86,11 @@ public class UIManager : MonoBehaviour
         Dimension = new Vector2(width * 2, height * 2);
     }
 
-    internal void AddCellConfig(CellPropertySettings.Rule config, IEnumerable<CellPropertySettings.Rule> rules)
+    internal void AddCellConfig(CellPropertySettings.CellConfig config, IEnumerable<CellPropertySettings.Rule> rules)
     {
 
         var cellSettings = new CellPropertySettings(config, rules);
-        cellSettings.userData = config.Id;
+        //cellSettings.userData = config.Id;
         cellSettings.onRuleChanged += _settings_onRuleChanged;
         cellSettings.onCountChanged += _settings_onCountChanged;
         cellSettings.onRemove += _cellSettings_onRemove;

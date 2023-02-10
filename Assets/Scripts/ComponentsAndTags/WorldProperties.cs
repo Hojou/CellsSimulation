@@ -23,7 +23,7 @@ public struct WorldProperties : IComponentData
     public float Speed;
     public float Strength;
     public float Scale;
-    //public NativeHashMap<int, NativeHashMap<int, float>> Rules;
+    public NativeArray<float> Rules; // Id1*32+Id2
 }
 
 public struct CellRandom : IComponentData

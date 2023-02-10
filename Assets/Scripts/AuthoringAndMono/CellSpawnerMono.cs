@@ -79,7 +79,7 @@ public class CellSpawnerBaker : Baker<CellSpawnerMono>, ICellSpawnerBaker
             Speed = authoring.Speed,
             Strength = authoring.Strength,
             Scale = authoring.Scale,
-            //Rules = rules
+            Rules = new NativeArray<float>(32*32, Allocator.Persistent)
         });
 
         AddComponent(new CellRandom { Value = Random.CreateFromIndex(authoring.RandomSeed) });
