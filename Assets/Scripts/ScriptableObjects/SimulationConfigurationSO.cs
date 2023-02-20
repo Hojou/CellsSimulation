@@ -8,49 +8,86 @@ using UnityEngine;
 
 public class SimulationConfigurationSO : ScriptableObject
 {
+    public float Strength;
+    public float Speed;
+    public float Scale;
+    public float Influence;
+    public uint RandomSeed;
+
     [ListDrawerSettings(Expanded = true, ShowIndexLabels = false)]
     [OnValueChanged("UpdateCellConfigData")]
-    [SerializeField] CellConfigData[] cells;
+    public CellConfigData[] cells;
 
     [OnValueChanged("UpdateCellConfigData")]
-    [SerializeField] CellRuleData[] rules;
+    public CellRuleData[] rules;
+
+    private List<CellConfigurationSO> _cellTypes;
 
     private void OnValidate()
     {
         UpdateCellConfigData();
+        LoadCellTypes();
+    }
+
+    private void LoadCellTypes()
+    {
+        CellConfigurationSO[] cellTypes = Resources.LoadAll<CellConfigurationSO>("Cells");
+        if (cellTypes.Length > 32)
+        {
+            throw new System.Exception("Too many Cell resources. Maximum number is 32. Remove some from the Cells folder");
+        }
+        this._cellTypes = cellTypes.ToList();
     }
 
     private void UpdateCellConfigData()
     {
+        for (int i = 0; i < cells.Length; i++)
+        {
+            if (cells[i].cell == null)
+            {
+                var nextCell = _cellTypes.First(ct => !cells.Select(c => c.cell).Contains(ct));
+                cells[i].cell = nextCell;
+            }
+        }
+
         var list = cells?
             .Where(c => c.cell != null)
             .Select(c => new ValueDropdownItem<CellConfigurationSO>(c.cell.Name, c.cell)).ToList();
 
         for (int i = 0; i < rules.Length; i++)
         {
-            rules[i].ListOfCells = list;
+            rules[i].ListOfPossibleCells = list;
         }
+
     }
+
+    
 
     [Serializable]
     public struct CellConfigData
     {
+        [HideInInspector]
         public CellConfigurationSO cell;
+
+        [ShowInInspector]
+        public string Name => cell?.Name;
+
         public int Count;
+
     }
 
     [Serializable]
     public struct CellRuleData
     {
-        [ValueDropdown("ListOfCells"), Required]
+        [ValueDropdown("ListOfPossibleCells"), Required]
         public CellConfigurationSO Cell1;
-        [ValueDropdown("ListOfCells"), Required]
+        [ValueDropdown("ListOfPossibleCells"), Required]
         public CellConfigurationSO Cell2;
 
         public float Amount;
 
         [NonSerialized]
-        internal List<ValueDropdownItem<CellConfigurationSO>> ListOfCells;
+        internal List<ValueDropdownItem<CellConfigurationSO>> ListOfPossibleCells;
     }
 
 

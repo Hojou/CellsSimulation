@@ -24,8 +24,7 @@ public partial struct SpawnCellsSystem : ISystem
         using var queryBuilder = new EntityQueryBuilder(Allocator.Temp)
                 .WithAll<CellProperties>()
                 .WithAll<SharedRulesGrouping>()
-                .WithAll<LocalTransform>()
-                ;
+                .WithAll<LocalTransform>();
         _jobQuery = state.GetEntityQuery(queryBuilder);
     }
 
@@ -38,19 +37,11 @@ public partial struct SpawnCellsSystem : ISystem
     public void OnUpdate(ref SystemState state)
     {
         var worldEntity = SystemAPI.GetSingletonEntity<WorldProperties>();
-
         var cellsBuffer = SystemAPI.GetBuffer<CellConfigurationProperties>(worldEntity);
         if (!cellsBuffer.IsEmpty)
         {
             UnityEngine.Debug.Log($"CellsBuffer: {cellsBuffer.Length}");
             UpdateCellCount(cellsBuffer, worldEntity, state);
-        }
-
-        var rulesBuffer = SystemAPI.GetBuffer<CellRule>(worldEntity);
-        if (!rulesBuffer.IsEmpty)
-        {
-            UnityEngine.Debug.Log($"RulesBuffer: {rulesBuffer.Length}");
-            UpdateRules(rulesBuffer, worldEntity, state);
         }
     }
 
@@ -61,7 +52,7 @@ public partial struct SpawnCellsSystem : ISystem
 
         foreach (var rule in cellsBuffer)
         {
-            var desiredCount = rule.NumberOfCells;
+            var desiredCount = math.clamp(rule.NumberOfCells, 0, 10000);
             var rulesComponent = new SharedRulesGrouping { Group = rule.Id };
             _jobQuery.ResetFilter();
             _jobQuery.SetSharedComponentFilter(rulesComponent);
@@ -70,7 +61,6 @@ public partial struct SpawnCellsSystem : ISystem
 
             if (difference > 0)
             {   // Add more
-                UnityEngine.Debug.Log($"Adding more {difference}");
                 for (int i = 0; i < difference; i++)
                 {
                     var cell = ecb.Instantiate(rule.Prefab);
@@ -94,34 +84,18 @@ public partial struct SpawnCellsSystem : ISystem
             }
             else
             {   // Remove entities
-                UnityEngine.Debug.Log($"Removing: {difference}");
-                for (int i = 0; i > difference; i--)
+                var count = math.abs(difference);
+                var entities = _jobQuery.ToEntityArray(Allocator.TempJob);
+                for (int i = 0; i < count ; i++)
                 {
-                    var entity = _jobQuery.GetSingletonEntity();
-                    ecb.DestroyEntity(entity);
+                    // TODO: Do i need to dispose datacomponents?                    
+                    ecb.DestroyEntity(entities[i]);
                 }
             }
         }
 
         cellsBuffer.Clear();
         ecb.SetBuffer<CellConfigurationProperties>(worldEntity);
-        ecb.Playback(state.EntityManager);
-    }
-
-    private void UpdateRules(DynamicBuffer<CellRule> rulesBuffer, Entity worldEntity, SystemState state)
-    {
-        //UnityEngine.Debug.Log("Updating rules! Count:" + rulesBuffer.Length.ToString());
-        var ecb = new EntityCommandBuffer(Allocator.Temp);
-        var rules = SystemAPI.GetSingletonRW<WorldProperties>().ValueRW.Rules;
-        
-        foreach (var rule in rulesBuffer)
-        {
-            int keyIndex = 32 * rule.Id1 + rule.Id2;
-            rules[keyIndex] = rule.Amount;
-        }
-
-        rulesBuffer.Clear();
-        ecb.SetBuffer<CellRule>(worldEntity);
         ecb.Playback(state.EntityManager);
     }
 }

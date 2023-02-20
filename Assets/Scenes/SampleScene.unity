@@ -418,7 +418,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &759471589
 MonoBehaviour:
@@ -436,6 +436,7 @@ MonoBehaviour:
     x: 0
     y: 0
   simulationConfigurations:
+  - {fileID: 11400000, guid: 5968092c8bfeafc4b9556e1a8c9a4377, type: 2}
   - {fileID: 11400000, guid: 7c8d8a03242d8b5409e6357c6b4060bf, type: 2}
 --- !u!1 &832575517
 GameObject:
@@ -515,7 +516,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 5
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1813523212
 GameObject:

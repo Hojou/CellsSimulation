@@ -19,7 +19,7 @@ public class CellPropertySettings : VisualElement
     public event Action<CellPropertySettings, int> onCountChanged;
     public event Action<CellPropertySettings> onRemove;
 
-    public CellPropertySettings() : this(new CellConfig("test", 0), Enumerable.Empty<Rule>())
+    public CellPropertySettings() // : this(new CellConfig("test", 0), Enumerable.Empty<Rule>())
     {
     }
 
@@ -50,6 +50,7 @@ public class CellPropertySettings : VisualElement
         hierarchy.Add(_rulesContainer);
     }
 
+    public string Name => _cellInput.label;
 
     private void CellCountChanged(ChangeEvent<string> evt)
     {
@@ -82,7 +83,7 @@ public class CellPropertySettings : VisualElement
         _rulesContainer.Clear();
         foreach (var rule in rules)
         {
-            //UnityEngine.Debug.Log($"Cell {cell.Label}. vs {rule.Label}({rule.Id}): {rule.Value}");
+            //UnityEngine.Debug.Log($"Cell {cell.Name}. VS {rule.Label}({rule.Id}): {rule.Value}");
             var slider = new Slider();
             slider.lowValue = -3f;
             slider.highValue = 3f;
@@ -97,11 +98,13 @@ public class CellPropertySettings : VisualElement
 
     public struct CellConfig
     {
+        public string Id;
         public string Name;
         public int Count;
 
-        public CellConfig(string Name, int Count)
+        public CellConfig(string Id, string Name, int Count)
         {
+            this.Id = Id;
             this.Name = Name;
             this.Count = Count;
         }

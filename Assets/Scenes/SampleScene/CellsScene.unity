@@ -132,7 +132,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1750367394}
-  - component: {fileID: 1750367393}
+  - component: {fileID: 1750367395}
   m_Layer: 0
   m_Name: Configuration
   m_TagString: Untagged
@@ -140,78 +140,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1750367393
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1750367392}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b4a757fde405f7748947ab89158527b1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Dimension:
-    x: 10
-    y: 10
-  Speed: 0.1
-  Strength: 1
-  RandomSeed: 1337
-  Scale: 0.2
-  CellConfigurations:
-  - rid: 5594738889444556800
-  - rid: 5594738889444556801
-  - rid: 5594738889444556802
-  Rules:
-  - Id1: 1
-    Id2: 1
-    Amount: -0.42
-  - Id1: 1
-    Id2: 2
-    Amount: -0.17
-  - Id1: 1
-    Id2: 3
-    Amount: 0.34
-  - Id1: 2
-    Id2: 2
-    Amount: -0.1
-  - Id1: 2
-    Id2: 1
-    Amount: -0.34
-  - Id1: 3
-    Id2: 3
-    Amount: 0.15
-  - Id1: 3
-    Id2: 1
-    Amount: -0.2
-  references:
-    version: 2
-    RefIds:
-    - rid: 5594738889444556800
-      type: {class: CellConfigurationMono, ns: , asm: Assembly-CSharp}
-      data:
-        Id: 1
-        Name: Green
-        NumberOfCells: 1000
-        Prefab: {fileID: 1598637203834845707, guid: be3fea1953699a54b9b6392618aede53,
-          type: 3}
-    - rid: 5594738889444556801
-      type: {class: CellConfigurationMono, ns: , asm: Assembly-CSharp}
-      data:
-        Id: 2
-        Name: Red
-        NumberOfCells: 1000
-        Prefab: {fileID: 1598637203834845707, guid: 16a29c0bbae64d640bae5d287b430b51,
-          type: 3}
-    - rid: 5594738889444556802
-      type: {class: CellConfigurationMono, ns: , asm: Assembly-CSharp}
-      data:
-        Id: 3
-        Name: Yellow
-        NumberOfCells: 2000
-        Prefab: {fileID: 1598637203834845707, guid: 87e11e44124b19544ada636d445318bd,
-          type: 3}
 --- !u!4 &1750367394
 Transform:
   m_ObjectHideFlags: 0
@@ -227,3 +155,15 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1750367395
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1750367392}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48bbe13ad4794df499980b96bae490d5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

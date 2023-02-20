@@ -23,6 +23,7 @@ public struct WorldProperties : IComponentData
     public float Speed;
     public float Strength;
     public float Scale;
+    public float Influence;
     public NativeArray<float> Rules; // Id1*32+Id2
 }
 

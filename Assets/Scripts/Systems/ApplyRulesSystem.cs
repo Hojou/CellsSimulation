@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -38,7 +39,9 @@ public partial struct ApplyRulesSystem : ISystem
         var worldEntity = SystemAPI.GetSingletonEntity<WorldProperties>();
         var props = SystemAPI.GetComponent<WorldProperties>(worldEntity);
 
-        state.EntityManager.GetAllUniqueSharedComponents(out NativeList<SharedRulesGrouping> uniqueCellRuleTypes, Allocator.Persistent);
+        //UnityEngine.Debug.Log("Rule 0: " + props.Rules[0]);
+
+        state.EntityManager.GetAllUniqueSharedComponents(out NativeList<SharedRulesGrouping> uniqueCellRuleTypes, Allocator.TempJob);
         foreach (var cellType in uniqueCellRuleTypes)
         {
             _jobQuery.AddSharedComponentFilter(cellType);
@@ -54,12 +57,14 @@ public partial struct ApplyRulesSystem : ISystem
                 CellPositions = cellLocations,
                 CellProperties = cellProperties,
                 CellRules = props.Rules,
-                Strength = props.Strength
+                Strength = props.Strength,
+                Distance = props.Influence
             };
             job.ScheduleParallel(_jobQuery);
 
-            _jobQuery.ResetFilter(); // TODO: Needed?
+            _jobQuery.ResetFilter();
         }
+        state.Dependency.Complete();
     }
 }
 
@@ -67,6 +72,7 @@ public partial struct ApplyRulesSystem : ISystem
 public partial struct ApplyRuleJob: IJobEntity
 {
     public float Strength;
+    public float Distance;
     [ReadOnly] public NativeArray<LocalTransform> CellPositions;
     [ReadOnly] public NativeArray<CellProperties> CellProperties;
     [ReadOnly] public NativeArray<float> CellRules;
@@ -85,7 +91,7 @@ public partial struct ApplyRuleJob: IJobEntity
             var dx = pos.x - otherPos.x;
             var dz = pos.z - otherPos.z;
             var dist = math.sqrt(dx * dx + dz * dz);
-            if (dist > 0 && dist < 1.6f)
+            if (dist > 0 && dist < Distance)
             {
                 var force = (Strength * amount) / dist;
                 velocityChange += force * new float3(dx, 0, dz);

@@ -7,7 +7,7 @@ public readonly partial struct WorldPropertiesAspect : IAspect
 {
     public readonly Entity Entity;
     public readonly DynamicBuffer<CellConfigurationProperties> cellProperties;
-    public readonly DynamicBuffer<CellRule> cellRules;
+    //public readonly DynamicBuffer<CellRule> cellRules;
 
     private readonly RefRW<CellRandom> _cellRandom;
     private readonly RefRW<WorldProperties> _worldProperties;
@@ -39,31 +39,15 @@ public readonly partial struct WorldPropertiesAspect : IAspect
         {
             var em = World.DefaultGameObjectInjectionWorld.EntityManager;
             em.GetAllUniqueSharedComponents(out NativeList<SharedRulesGrouping> uniqueCellRuleTypes, Allocator.Persistent);
-            //var names = new NativeHashMap<int, FixedString32Bytes>();
-            //names.Add(1, "Green");
-            //names.Add(2, "Red");
-            //names.Add(3, "Yellow");
-            //names.Add(4, "Blue");
-
-
-
-            //var ccp = new CellConfigurationProperties
-            //{
-            //    Id= 0,
-            //    Name = names[0],
-            //    NumberOfCells= 1  
-            //};
-
-
                 return cellProperties.ToNativeArray(Allocator.TempJob);
         }
     }
 
-    public NativeArray<CellRule> CellRules
-    {
-        get
-        {
-            return cellRules.ToNativeArray(Allocator.TempJob);
-        }
-    }
+    //public NativeArray<CellRule> CellRules
+    //{
+    //    get
+    //    {
+    //        return cellRules.ToNativeArray(Allocator.TempJob);
+    //    }
+    //}
 }

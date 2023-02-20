@@ -7,6 +7,6 @@ public class CellConfigurationSO : ScriptableObject
     [SerializeField]
     [AssetsOnly]
     private GameObject prefab;
-
-    public string Name;
+    public GameObject cellPrefab => prefab;
+    public string Name => name;
 }
