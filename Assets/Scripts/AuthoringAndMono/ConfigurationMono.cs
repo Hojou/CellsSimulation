@@ -18,7 +18,6 @@ public class ConfigurationBaker : Baker<ConfigurationMono>
 {
     public override void Bake(ConfigurationMono authoring)
     {
-        Debug.Log("BAKING WORLD");
         AddComponent(new WorldProperties
         {
             Dimension = new float2(5, 5),

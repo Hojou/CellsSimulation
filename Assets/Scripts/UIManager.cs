@@ -1,51 +1,62 @@
+using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UIElements;
+using static SimulationConfigurationSO;
 
 public class UIManager : MonoBehaviour
 {
     private VisualElement _root;
-    private Slider _speed;
+    //private Slider _speed;
     private Slider _strength;
     private Slider _influence;
-    private Button _addButton;
+    private Button _openClose;
+    private Button _reset;
+    private DropdownField _configurationDropdown;
+    //private Button _addButton;
     private VisualElement _cellConfigurations;
+    private VisualElement _menu;
 
     public float2 Dimension;
-    public event Action<float> onSpeedChanged;
-    public event Action<float> onStrengthChanged;
-    public event Action<float2> onDimensionChanged;
-    public event Action<float> onInfluenceChanged;
-    public event Action<uint> onSeedChanged;
-    public event Action onSettingsLoaded;
+    //public event Action<float> onSpeedChanged;
+    //public event Action<float> onStrengthChanged;
+    //public event Action<float2> onDimensionChanged;
+    //public event Action<float> onInfluenceChanged;
+    //public event Action<uint> onSeedChanged;
 
-    public readonly SyncableValueHolder<bool> Rules = new SyncableValueHolder<bool>(false);
-    public readonly SyncableValueHolder<bool> CellCount = new SyncableValueHolder<bool>(false);
+    public readonly DirtyTracker Rules = new DirtyTracker();
+    public readonly DirtyTracker CellCount = new DirtyTracker();
+    public readonly DirtyTracker SettingsLoaded = new DirtyTracker();
+    public readonly DirtyTracker Properties = new DirtyTracker();
+
+    public bool IsDirty => Properties.IsDirty || SettingsLoaded.IsDirty || Rules.IsDirty || CellCount.IsDirty;
 
     [SerializeField] private List<SimulationConfigurationSO> simulationConfigurations;
 
     private SimulationConfigurationSO _currentSimulation;
 
-    public float Speed
-    {
-        get => _speed?.value ?? 0;
-        private set => _speed.SetValueWithoutNotify(value);
-    }
+    [ShowInInspector]
+    private List<CellRuleData> CellRules => _currentSimulation?.rules;
 
-    public float Strength
+    //private float Speed
+    //{
+    //    get => _speed?.value ?? 0;
+    //    set => _speed.SetValueWithoutNotify(value);
+    //}
+
+    private float Strength
     {
         get => _strength?.value ?? 0;
-        private set => _strength.SetValueWithoutNotify(value);
+        set => _strength.SetValueWithoutNotify(value);
     }
 
-    public float Influence
+    float Influence
     {
         get => _influence?.value ?? 0;
-        private set => _influence.SetValueWithoutNotify(value);
+        set => _influence.SetValueWithoutNotify(value);
     }
 
     public uint Seed
@@ -57,29 +68,73 @@ public class UIManager : MonoBehaviour
     {
         CalculateDimensions();
         _root = GetComponent<UIDocument>().rootVisualElement;
-        _speed = _root.Query<Slider>(name: "Speed");
+        //_speed = _root.Query<Slider>(name: "Speed");
         _strength = _root.Query<Slider>(name: "Strength");
-        _influence= _root.Query<Slider>(name: "Influence");
-        _addButton = _root.Query<Button>(name: "AddButton");
+        _influence = _root.Query<Slider>(name: "Influence");
+        _openClose = _root.Query<Button>(name: "OpenCloseButton");
+        _reset = _root.Query<Button>(name: "ResetButton");
+        _configurationDropdown = _root.Query<DropdownField>(name: "ConfigDropdown");
         _cellConfigurations = _root.Query<VisualElement>(name: "CellConfigurations");
+        _menu = _root.Query<VisualElement>(name: "Menu");
 
-        _speed.RegisterValueChangedCallback(evt => onSpeedChanged?.Invoke(evt.newValue));
-        _strength.RegisterValueChangedCallback(evt => onStrengthChanged?.Invoke(evt.newValue));
-        _influence.RegisterValueChangedCallback(evt => onInfluenceChanged?.Invoke(evt.newValue));
+        //_speed.RegisterValueChangedCallback(UpdateProperties);
+        _strength.RegisterValueChangedCallback(UpdateProperties);
+        _influence.RegisterValueChangedCallback(UpdateProperties);
+
+        _openClose.clicked += ToggleMenu;
+        _reset.clicked += ResetSimulation;
         //_addButton.clicked += _addButton_clicked;
-        onDimensionChanged?.Invoke(Dimension);
-        onSeedChanged?.Invoke(1337);
+        //onDimensionChanged?.Invoke(Dimension);
+        //onSeedChanged?.Invoke(1337);
+
+        _configurationDropdown.choices = simulationConfigurations.Select(c => c.name).ToList();
+        _configurationDropdown.RegisterValueChangedCallback(ConfigurationSelected);
+        _configurationDropdown.value = simulationConfigurations[0].name;
+        _currentSimulation = ScriptableObject.Instantiate(simulationConfigurations[0]);
 
         LoadConfiguration();
+    }
+
+    private void ConfigurationSelected(ChangeEvent<string> evt)
+    {
+        var config = simulationConfigurations.Find(c => c.name == evt.newValue);
+        if (config == null) { return; }
+        _configurationDropdown.value = config.name;
+        _currentSimulation = ScriptableObject.Instantiate(config);
+        LoadConfiguration();
+    }
+
+    private void UpdateProperties(ChangeEvent<float> evt)
+    {
+        CurrentConfiguration.Strength = Strength;
+        //CurrentConfiguration.Speed = Speed;
+        CurrentConfiguration.Influence = Influence;
+
+        Properties.SetDirty();
+    }
+
+    private void ResetSimulation()
+    {
+        Debug.Log("Resetting sim");
+        LoadConfiguration();
+    }
+
+    private void ToggleMenu()
+    {
+        var open = _menu.style.display != DisplayStyle.None;
+        var newState = open ? DisplayStyle.None : DisplayStyle.Flex;
+        var text = open ? ">" : "X";
+
+        _menu.style.display = newState;
+        _openClose.text = text;
     }
 
     public SimulationConfigurationSO CurrentConfiguration => _currentSimulation;
 
     private void LoadConfiguration()
     {
-        _currentSimulation = ScriptableObject.Instantiate(simulationConfigurations[0]);
         Strength = _currentSimulation.Strength;
-        Speed = _currentSimulation.Speed;
+        //Speed = _currentSimulation.Speed;
         Seed = _currentSimulation.RandomSeed;
         _cellConfigurations.Clear();
         var rules = _currentSimulation.rules.ToList();
@@ -95,23 +150,35 @@ public class UIManager : MonoBehaviour
             };
             var cellRules = cells.Select(c => new CellPropertySettings.Rule
             {
-                Id = cell.cell.name,
+                Id = c.cell.name,
                 Label = $"{cell.Name} vs {c.Name}",
                 MinValue = -3f,
                 MaxValue = 3f,
                 Value = rules.FirstOrDefault(r => r.Cell1 == cell.cell && r.Cell2 == c.cell).Amount
             }).ToList();
+            foreach (var otherCell in cells)
+            {
+                if (_currentSimulation.rules.Any(s => s.Cell1 == cell.cell && s.Cell2 == otherCell.cell))
+                {
+                    continue;
+                }
+                var newRule = new CellRuleData
+                {
+                    Cell1 = cell.cell,
+                    Cell2 = otherCell.cell,
+                    Amount = 0
+                };
+                _currentSimulation.rules.Add(newRule);
+            }
 
-            UnityEngine.Debug.Log($"===========> Cell:{cell.Name}, #Rules:{cellRules.Count}");
             AddCellConfig(config, cellRules);
         }
 
         Strength = _currentSimulation.Strength;
-        Speed = _currentSimulation.Speed;
+        //Speed = _currentSimulation.Speed;
         Influence = _currentSimulation.Influence;
 
-        UnityEngine.Debug.Log("UI MANAGER LOADED");
-        onSettingsLoaded?.Invoke();
+        SettingsLoaded.SetDirty();
     }
 
     //private void _addButton_clicked()
@@ -130,10 +197,9 @@ public class UIManager : MonoBehaviour
 
     private void _settings_onCountChanged(CellPropertySettings cellSettings, int count)
     {
-        //Debug.Log($"Count changed: {count} for {cellSettings.userData}");
         var cellName = (string)cellSettings.userData;
 
-        var length = _currentSimulation.rules.Length;
+        var length = _currentSimulation.cells.Length;
         for (int i = 0; i < length; i++)
         {
             var c = _currentSimulation.cells[i];
@@ -146,18 +212,13 @@ public class UIManager : MonoBehaviour
 
     private void _settings_onRuleChanged(CellPropertySettings cellSettings, CellPropertySettings.Rule rule)
     {
-        //Debug.Log($"Rule changed for {cellSettings.userData}-{rule.Id}: {rule.Value}");
         string cell1Name = (string)cellSettings.userData;
         string cell2Name = rule.Id;
-        float amount = rule.Value;
 
-        var length = _currentSimulation.rules.Length;
-        for (int i = 0; i < length; i++)
-        {
-            var r = _currentSimulation.rules[i];
-            if (r.Cell1.name != cell1Name || r.Cell2.name != cell2Name) continue;
-            _currentSimulation.rules[i].Amount = amount;
-        }
+        var ruleIndex = _currentSimulation.rules.FindIndex(r => (r.Cell1.name == cell1Name && r.Cell2.name == cell2Name));
+        var newRule = _currentSimulation.rules[ruleIndex];
+        newRule.Amount = rule.Value;
+        _currentSimulation.rules[ruleIndex] = newRule;
         
         Rules.SetDirty();
     }
@@ -170,6 +231,7 @@ public class UIManager : MonoBehaviour
         float height = orthoSize;
         Dimension = new Vector2(width * 2, height * 2);
     }
+
 
     private void AddCellConfig(CellPropertySettings.CellConfig config, IEnumerable<CellPropertySettings.Rule> rules)
     {

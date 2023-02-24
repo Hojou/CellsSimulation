@@ -83,13 +83,12 @@ public class CellPropertySettings : VisualElement
         _rulesContainer.Clear();
         foreach (var rule in rules)
         {
-            //UnityEngine.Debug.Log($"Cell {cell.Name}. VS {rule.Label}({rule.Id}): {rule.Value}");
             var slider = new Slider();
             slider.lowValue = -3f;
             slider.highValue = 3f;
             slider.label = rule.Label;
             slider.value = rule.Value;
-            slider.userData = rule.Id;
+            slider.userData = cell.Id;
             slider.showInputField = true;
             slider.RegisterValueChangedCallback(evt => onRuleChanged?.Invoke(this, new Rule(rule.Id, evt.newValue)));
             _rulesContainer.Add(slider);

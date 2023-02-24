@@ -1,51 +1,22 @@
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using Unity.Collections;
 using Unity.Entities;
-using Unity.Mathematics;
 using UnityEngine;
-using sRule = CellPropertySettings.Rule;
-using sConfig = CellPropertySettings.CellConfig;
-using Unity.VisualScripting;
-using Sirenix.Utilities;
-using static UIManager;
 
 public partial class ManagedCodeBridge : SystemBase
 {
     private UIManager _uiManager;
-
-    private readonly SyncableValueHolder<float> _speed = new SyncableValueHolder<float>(1);
-    private readonly SyncableValueHolder<float> _strength = new SyncableValueHolder<float>(1);
-    private readonly SyncableValueHolder<float> _scale = new SyncableValueHolder<float>(1);
-    private readonly SyncableValueHolder<float> _influence = new SyncableValueHolder<float>(1);
-    private readonly SyncableValueHolder<float2> _dimension = new SyncableValueHolder<float2>(new float2(5, 5));
-    private readonly SyncableValueHolder<bool> _loaded = new SyncableValueHolder<bool>(false);
-    //private readonly SyncableValueHolder<uint> _seed = new SyncableValueHolder<uint>(0);
-    //private readonly Dictionary<string, Tuple<sRule, IEnumerable<sRule>>> _rulesToProcess = new Dictionary<string, Tuple<sRule, IEnumerable<sRule>>>();
-
     private NativeHashMap<FixedString32Bytes, Entity> _prefabMap;
     private NativeHashMap<FixedString32Bytes, int> _cellLookup;
 
-    //EndSimulationEntityCommandBufferSystem m_EndSimulationEcbSystem;
-
     protected override void OnCreate()
     {
-        //UnityEngine.Debug.Log("OnCreate");
         RequireForUpdate<WorldProperties>();
         _uiManager = GameObject.FindObjectOfType<UIManager>();
-        _uiManager.onSpeedChanged += _speed.SetValue;
-        _uiManager.onStrengthChanged += _strength.SetValue;
-        _uiManager.onDimensionChanged += _dimension.SetValue;
-        _uiManager.onInfluenceChanged += _influence.SetValue;
-        _uiManager.onSettingsLoaded += () => { UnityEngine.Debug.Log("Action triggered loaded"); _loaded.SetValue(true); };
-        //_uiManager.onRuleChanged += (cell, rules) => _rulesToProcess.TryAdd(cell.Id, new Tuple<sRule, IEnumerable<sRule>>(cell, rules));
     }
 
     protected override void OnStartRunning()
     {
-        //UnityEngine.Debug.Log("InitializeCellConfigurations");
-        //InitializeCellConfigurations();
         var worldEntity = SystemAPI.GetSingletonEntity<WorldProperties>();
         using var prefabs = SystemAPI.GetBuffer<BakedCellPrefab>(worldEntity).AsNativeArray();
         _prefabMap = new NativeHashMap<FixedString32Bytes, Entity>(prefabs.Length, Allocator.Persistent);
@@ -56,75 +27,48 @@ public partial class ManagedCodeBridge : SystemBase
             _prefabMap.Add(prefab.Name, prefab.Prefab);
             _cellLookup.Add(prefab.Name, index++);
         }
-
     }
-
-    //private void InitializeCellConfigurations()
-    //{
-    //    //UnityEngine.Debug.Log("Initialize");
-    //    _rulesToProcess.Clear();
-
-    //    var entity = SystemAPI.GetSingletonEntity<WorldProperties>();
-    //    var world = SystemAPI.GetAspectRO<WorldPropertiesAspect>(entity);
-
-    //    var cellConfigurations = world.CellConfigurations;
-    //    using var rules = world.CellRules;
-
-    //    foreach (var config in cellConfigurations)
-    //    {
-    //        var cellConfig = new sConfig
-    //        {
-    //            //Id = config.Id.ToString(),
-    //            Name = config.Name.ToString(),
-    //            Count = config.NumberOfCells
-    //        };
-
-    //        var cellRules = new List<sRule>();
-    //        foreach (var rule in rules)
-    //        {
-    //            if (rule.Id1 != config.Id) continue;
-    //            var vsName = cellConfigurations.Single(r => r.Id == rule.Id2).Name;
-    //            //UnityEngine.Debug.Log($"Rule Id{rule.Id1}: vs {rule.Id2}({vsName}), value:{rule.Amount}");
-    //            cellRules.Add(new sRule
-    //            {
-    //                Id = rule.Id2.ToString(),
-    //                Label = $"vs {vsName}",
-    //                Value = rule.Amount
-    //            });
-    //        }
-
-    //        _uiManager.AddCellConfig(cellConfig, cellRules);
-    //}
-    //}
 
     protected override void OnUpdate()
     {
-        bool dummy = false;
-        if (_loaded.SyncValue(ref dummy))
+        if (!_uiManager.IsDirty) { return;  }
+
+        if (_uiManager.SettingsLoaded.CheckIfDirtyAndThenClean())
         {
             InitWorld();
         }
 
-        var properties = SystemAPI.GetSingletonRW<WorldProperties>();
-        _speed.SyncValue(ref properties.ValueRW.Speed);
-        _strength.SyncValue(ref properties.ValueRW.Strength);
-        _dimension.SyncValue(ref properties.ValueRW.Dimension);
-        _influence.SyncValue(ref properties.ValueRW.Influence);
-
-        if (_uiManager.Rules.IsDirty)
+        if (_uiManager.Properties.CheckIfDirtyAndThenClean())
         {
-            _uiManager.Rules.SyncValue();
+            UpdateProperties();
+        }
+
+        if (_uiManager.Rules.CheckIfDirtyAndThenClean())
+        {
             UpdateRules();
         }
 
-        if (_uiManager.CellCount.IsDirty)
+        if (_uiManager.CellCount.CheckIfDirtyAndThenClean())
         {
-            _uiManager.CellCount.SyncValue();
             UpdateCellCounts();
         }
     }
 
-    private void UpdateCellCounts()
+    private void UpdateProperties()
+    {
+        var properties = SystemAPI.GetSingletonRW<WorldProperties>();
+        var cellRandom = SystemAPI.GetSingletonRW<CellRandom>();
+        var configuration = _uiManager.CurrentConfiguration;
+
+        //properties.ValueRW.Speed = configuration.Speed;
+        properties.ValueRW.Strength = configuration.Strength;
+        properties.ValueRW.Influence= configuration.Influence;
+        properties.ValueRW.Scale = configuration.Scale;
+        properties.ValueRW.Dimension = _uiManager.Dimension;
+        cellRandom.ValueRW.Value = Unity.Mathematics.Random.CreateFromIndex(_uiManager.CurrentConfiguration.RandomSeed);
+    }
+
+    private void UpdateCellCounts(bool clearAll = false)
     {
         var worldEntity = SystemAPI.GetSingletonEntity<WorldProperties>();
         var cellsBuffer = SystemAPI.GetBuffer<CellConfigurationProperties>(worldEntity);
@@ -137,6 +81,15 @@ public partial class ManagedCodeBridge : SystemBase
                 NumberOfCells = cell.Count,
                 Prefab = _prefabMap[name]
             });
+        }
+        if (!clearAll) return;
+
+        var addedIds = _uiManager.CurrentConfiguration.cells.Select(cell => _cellLookup[cell.cell.name]);
+        var allIds = _cellLookup.GetValueArray(Allocator.Temp).ToArray<int>();
+        var IdsToClear = allIds.Except(addedIds);
+        foreach (var Id in IdsToClear)
+        {
+            cellsBuffer.Add(new CellConfigurationProperties() { Id = Id, NumberOfCells = 0 });
         }
     }
 
@@ -156,52 +109,8 @@ public partial class ManagedCodeBridge : SystemBase
 
     private void InitWorld()
     {
-        UnityEngine.Debug.Log("INIT WORLD");
-
-        UpdateCellCounts();
-
+        UpdateCellCounts(clearAll: true);
         UpdateRules();
-
-        var cellRandom = SystemAPI.GetSingletonRW<CellRandom>();
-        cellRandom.ValueRW.Value = Unity.Mathematics.Random.CreateFromIndex(_uiManager.CurrentConfiguration.RandomSeed);
-
-        var worldProperties = SystemAPI.GetSingletonRW<WorldProperties>();
-        var simulation = _uiManager.CurrentConfiguration;
-        worldProperties.ValueRW.Speed = simulation.Speed;
-        worldProperties.ValueRW.Strength = simulation.Strength;
-        worldProperties.ValueRW.Dimension = _dimension.SyncValue();
-        worldProperties.ValueRW.Scale = simulation.Scale;
-        worldProperties.ValueRW.Influence = simulation.Influence;
-    }
-
-    private void UpdateRulesx()
-    {
-        //int cellId = int.Parse(cellRule.Id);
-
-        // 1) Add into to CellsBuffer on how many cells
-        // 2) Modify directly on WorldProperties.Rules the new rules
-        // 3) Use this from UpdateAllRules()    
-
-
-
-        //var worldEntity = SystemAPI.GetSingletonEntity<WorldProperties>();
-        //var cellsBuffer = SystemAPI.GetBuffer<CellConfigurationProperties>(worldEntity);
-
-        //var config = _uiManager.CurrentConfiguration;
-        //var configurationRules = config.rules;
-        //var index = 0;
-        //var cellIdLookup = new NativeHashMap<FixedString32Bytes, int>(32, Allocator.TempJob);
-        //foreach (var cell in config.cells)
-        //{
-        //    var name = cell.cell.name;
-        //    cellIdLookup.Add(name, index);
-        //    cellsBuffer.Add(new CellConfigurationProperties()
-        //    {
-        //        Id = cellId,
-        //        NumberOfCells = cellRule.Value,
-        //        Prefab = _prefabMap[name]
-        //    });
-        //    index++;
-        //}
+        UpdateProperties();
     }
 }

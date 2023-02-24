@@ -9,7 +9,7 @@ using UnityEngine;
 public class SimulationConfigurationSO : ScriptableObject
 {
     public float Strength;
-    public float Speed;
+    //public float Speed;
     public float Scale;
     public float Influence;
     public uint RandomSeed;
@@ -19,7 +19,8 @@ public class SimulationConfigurationSO : ScriptableObject
     public CellConfigData[] cells;
 
     [OnValueChanged("UpdateCellConfigData")]
-    public CellRuleData[] rules;
+    [ShowInInlineEditors]
+    public List<CellRuleData> rules = new List<CellRuleData>();
 
     private List<CellConfigurationSO> _cellTypes;
 
@@ -54,10 +55,12 @@ public class SimulationConfigurationSO : ScriptableObject
             .Where(c => c.cell != null)
             .Select(c => new ValueDropdownItem<CellConfigurationSO>(c.cell.Name, c.cell)).ToList();
 
-        for (int i = 0; i < rules.Length; i++)
-        {
-            rules[i].ListOfPossibleCells = list;
-        }
+        rules.ForEach(rule => rule.ListOfPossibleCells = list);
+
+        //for (int i = 0; i < rules.Length; i++)
+        //{
+        //    rules[i].ListOfPossibleCells = list;
+        //}
 
     }
 
@@ -77,6 +80,7 @@ public class SimulationConfigurationSO : ScriptableObject
     }
 
     [Serializable]
+
     public struct CellRuleData
     {
         [ValueDropdown("ListOfPossibleCells"), Required]

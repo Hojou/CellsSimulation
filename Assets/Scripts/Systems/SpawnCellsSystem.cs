@@ -40,7 +40,6 @@ public partial struct SpawnCellsSystem : ISystem
         var cellsBuffer = SystemAPI.GetBuffer<CellConfigurationProperties>(worldEntity);
         if (!cellsBuffer.IsEmpty)
         {
-            UnityEngine.Debug.Log($"CellsBuffer: {cellsBuffer.Length}");
             UpdateCellCount(cellsBuffer, worldEntity, state);
         }
     }
@@ -85,12 +84,16 @@ public partial struct SpawnCellsSystem : ISystem
             else
             {   // Remove entities
                 var count = math.abs(difference);
-                var entities = _jobQuery.ToEntityArray(Allocator.TempJob);
-                for (int i = 0; i < count ; i++)
+                using var allEntities = _jobQuery.ToEntityArray(Allocator.Temp);
+                var entities = new NativeArray<Entity>(count, Allocator.Temp);
+
+                for (int i = 0; i < count; i++)
                 {
-                    // TODO: Do i need to dispose datacomponents?                    
-                    ecb.DestroyEntity(entities[i]);
+                    entities[i] = allEntities[i];
                 }
+
+                ecb.DestroyEntity(entities);
+                entities.Dispose();
             }
         }
 

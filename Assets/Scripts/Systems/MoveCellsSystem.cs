@@ -4,7 +4,7 @@ using Unity.Mathematics;
 
 [BurstCompile]
 [UpdateAfter(typeof(ApplyRulesSystem))]
-public partial struct MoveCellsSystem : ISystem, ISystemStartStop
+public partial struct MoveCellsSystem : ISystem
 {
     [BurstCompile]
     public void OnCreate(ref SystemState state)
@@ -18,28 +18,15 @@ public partial struct MoveCellsSystem : ISystem, ISystemStartStop
     }
 
     [BurstCompile]
-    public void OnStartRunning(ref SystemState state)
-    {
-        //var properties = SystemAPI.GetSingletonEntity<WorldProperties>();
-        //var aspect = SystemAPI.GetAspectRW<WorldPropertiesAspect>(properties);
-    }
-
-    [BurstCompile]
-    public void OnStopRunning(ref SystemState state)
-    {
-    }
-
-    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         var deltaTime = math.min(0.05f, SystemAPI.Time.DeltaTime);
         var worlProperties = SystemAPI.GetSingleton<WorldProperties>();
         var dimension = worlProperties.Dimension;
-        //UnityEngine.Debug.Log($"Dimensions: {dimension.x},{dimension.y}");
 
         new MoveCellJob
         {
-            DeltaTime = deltaTime * worlProperties.Speed,
+            DeltaTime = deltaTime * worlProperties.Strength,
             MinX = -(dimension.x / 2),
             MaxX = (dimension.x / 2),
             MinY = -(dimension.y / 2),
