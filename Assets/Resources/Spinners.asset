@@ -1,0 +1,76 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a4188d0d1cf7364fb9db3c70bd11b92, type: 3}
+  m_Name: Spinners
+  m_EditorClassIdentifier: 
+  Strength: 5
+  Scale: 0.2
+  Influence: 5
+  RandomSeed: 1
+  cells:
+  - cell: {fileID: 11400000, guid: ad1b43cec3da3ff4982130872712b78c, type: 2}
+    Count: 1000
+  - cell: {fileID: 11400000, guid: fe17baf31c04bbd4ba827f776cdd1015, type: 2}
+    Count: 1000
+  - cell: {fileID: 11400000, guid: 28b2c4f99893fd245a80d94e9c470f70, type: 2}
+    Count: 1000
+  - cell: {fileID: 11400000, guid: 2f77cd025f0d9024ab50abcbe76e3ae5, type: 2}
+    Count: 1000
+  rules:
+  - Cell1: {fileID: 11400000, guid: ad1b43cec3da3ff4982130872712b78c, type: 2}
+    Cell2: {fileID: 11400000, guid: ad1b43cec3da3ff4982130872712b78c, type: 2}
+    Amount: 1.65
+  - Cell1: {fileID: 11400000, guid: ad1b43cec3da3ff4982130872712b78c, type: 2}
+    Cell2: {fileID: 11400000, guid: fe17baf31c04bbd4ba827f776cdd1015, type: 2}
+    Amount: 1.2
+  - Cell1: {fileID: 11400000, guid: ad1b43cec3da3ff4982130872712b78c, type: 2}
+    Cell2: {fileID: 11400000, guid: 28b2c4f99893fd245a80d94e9c470f70, type: 2}
+    Amount: -1.65
+  - Cell1: {fileID: 11400000, guid: ad1b43cec3da3ff4982130872712b78c, type: 2}
+    Cell2: {fileID: 11400000, guid: 2f77cd025f0d9024ab50abcbe76e3ae5, type: 2}
+    Amount: 0.27
+  - Cell1: {fileID: 11400000, guid: fe17baf31c04bbd4ba827f776cdd1015, type: 2}
+    Cell2: {fileID: 11400000, guid: fe17baf31c04bbd4ba827f776cdd1015, type: 2}
+    Amount: -1.15
+  - Cell1: {fileID: 11400000, guid: fe17baf31c04bbd4ba827f776cdd1015, type: 2}
+    Cell2: {fileID: 11400000, guid: ad1b43cec3da3ff4982130872712b78c, type: 2}
+    Amount: 0.5
+  - Cell1: {fileID: 11400000, guid: fe17baf31c04bbd4ba827f776cdd1015, type: 2}
+    Cell2: {fileID: 11400000, guid: 28b2c4f99893fd245a80d94e9c470f70, type: 2}
+    Amount: 1.05
+  - Cell1: {fileID: 11400000, guid: fe17baf31c04bbd4ba827f776cdd1015, type: 2}
+    Cell2: {fileID: 11400000, guid: 2f77cd025f0d9024ab50abcbe76e3ae5, type: 2}
+    Amount: -2.2
+  - Cell1: {fileID: 11400000, guid: 28b2c4f99893fd245a80d94e9c470f70, type: 2}
+    Cell2: {fileID: 11400000, guid: 28b2c4f99893fd245a80d94e9c470f70, type: 2}
+    Amount: -0.17
+  - Cell1: {fileID: 11400000, guid: 28b2c4f99893fd245a80d94e9c470f70, type: 2}
+    Cell2: {fileID: 11400000, guid: fe17baf31c04bbd4ba827f776cdd1015, type: 2}
+    Amount: 1.45
+  - Cell1: {fileID: 11400000, guid: 28b2c4f99893fd245a80d94e9c470f70, type: 2}
+    Cell2: {fileID: 11400000, guid: ad1b43cec3da3ff4982130872712b78c, type: 2}
+    Amount: -4.8
+  - Cell1: {fileID: 11400000, guid: 28b2c4f99893fd245a80d94e9c470f70, type: 2}
+    Cell2: {fileID: 11400000, guid: 2f77cd025f0d9024ab50abcbe76e3ae5, type: 2}
+    Amount: 0.4
+  - Cell1: {fileID: 11400000, guid: 2f77cd025f0d9024ab50abcbe76e3ae5, type: 2}
+    Cell2: {fileID: 11400000, guid: 2f77cd025f0d9024ab50abcbe76e3ae5, type: 2}
+    Amount: -0.85
+  - Cell1: {fileID: 11400000, guid: 2f77cd025f0d9024ab50abcbe76e3ae5, type: 2}
+    Cell2: {fileID: 11400000, guid: 28b2c4f99893fd245a80d94e9c470f70, type: 2}
+    Amount: 0.16
+  - Cell1: {fileID: 11400000, guid: 2f77cd025f0d9024ab50abcbe76e3ae5, type: 2}
+    Cell2: {fileID: 11400000, guid: fe17baf31c04bbd4ba827f776cdd1015, type: 2}
+    Amount: -4
+  - Cell1: {fileID: 11400000, guid: 2f77cd025f0d9024ab50abcbe76e3ae5, type: 2}
+    Cell2: {fileID: 11400000, guid: ad1b43cec3da3ff4982130872712b78c, type: 2}
+    Amount: 0.25

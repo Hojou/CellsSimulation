@@ -4,10 +4,10 @@
         <ui:ScrollView name="Menu" style="width: 450px; height: auto;">
             <ui:Slider picking-mode="Ignore" label="Strength" value="0" high-value="3" name="Strength" show-input-field="true" />
             <ui:Slider picking-mode="Ignore" label="Influence" value="0" high-value="20" name="Influence" inverted="false" show-input-field="true" />
-            <ui:DropdownField label="Config" index="-1" choices="System.Collections.Generic.List`1[System.String]" name="ConfigDropDown" />
+            <ui:DropdownField label="Config" index="-1" choices="System.Collections.Generic.List`1[System.String]" name="ConfigDropdown" />
             <ui:VisualElement name="Buttons" style="flex-grow: 0; display: flex; font-size: 12px; flex-direction: row;">
                 <ui:Button text="Reset Simulation" display-tooltip-when-elided="true" name="ResetButton" />
-                <ui:Button text="Add Celltype" display-tooltip-when-elided="true" name="AddButton" />
+                <ui:Button text="Save" display-tooltip-when-elided="true" name="SaveButton" />
             </ui:VisualElement>
             <ui:VisualElement name="CellConfigurations" style="flex-grow: 1; background-color: rgba(0, 0, 0, 0); color: rgb(255, 253, 179); display: flex;">
                 <CellPropertySettings />

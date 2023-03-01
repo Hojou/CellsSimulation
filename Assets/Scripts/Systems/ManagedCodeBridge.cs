@@ -31,7 +31,7 @@ public partial class ManagedCodeBridge : SystemBase
 
     protected override void OnUpdate()
     {
-        if (!_uiManager.IsDirty) { return;  }
+        if (!_uiManager.IsDirty) { return; }
 
         if (_uiManager.SettingsLoaded.CheckIfDirtyAndThenClean())
         {
@@ -61,8 +61,9 @@ public partial class ManagedCodeBridge : SystemBase
         var configuration = _uiManager.CurrentConfiguration;
 
         //properties.ValueRW.Speed = configuration.Speed;
+        UnityEngine.Debug.Log($"configuration {configuration.name} loaded");
         properties.ValueRW.Strength = configuration.Strength;
-        properties.ValueRW.Influence= configuration.Influence;
+        properties.ValueRW.Influence = configuration.Influence;
         properties.ValueRW.Scale = configuration.Scale;
         properties.ValueRW.Dimension = _uiManager.Dimension;
         cellRandom.ValueRW.Value = Unity.Mathematics.Random.CreateFromIndex(_uiManager.CurrentConfiguration.RandomSeed);
@@ -85,7 +86,7 @@ public partial class ManagedCodeBridge : SystemBase
         if (!clearAll) return;
 
         var addedIds = _uiManager.CurrentConfiguration.cells.Select(cell => _cellLookup[cell.cell.name]);
-        var allIds = _cellLookup.GetValueArray(Allocator.Temp).ToArray<int>();
+        using var allIds = _cellLookup.GetValueArray(Allocator.Temp);
         var IdsToClear = allIds.Except(addedIds);
         foreach (var Id in IdsToClear)
         {
@@ -93,13 +94,21 @@ public partial class ManagedCodeBridge : SystemBase
         }
     }
 
-    private void UpdateRules()
+    private void UpdateRules(bool clearAll = false)
     {
         var worldProperties = SystemAPI.GetSingletonRW<WorldProperties>();
         var worldRules = worldProperties.ValueRW.Rules;
+        if (clearAll)
+        {
+            for (int keyIndex = 0; keyIndex < 32 * 32; keyIndex++)
+            {
+                worldRules[keyIndex] = 0;
+            }
+        }
         var configurationRules = _uiManager.CurrentConfiguration.rules;
         foreach (var rule in configurationRules)
         {
+            Debug.Log($"Rule changed {rule.Amount}");
             var Id1 = _cellLookup[rule.Cell1.name];
             var Id2 = _cellLookup[rule.Cell2.name];
             int keyIndex = 32 * Id1 + Id2;
@@ -110,7 +119,7 @@ public partial class ManagedCodeBridge : SystemBase
     private void InitWorld()
     {
         UpdateCellCounts(clearAll: true);
-        UpdateRules();
+        UpdateRules(clearAll: true);
         UpdateProperties();
     }
 }
