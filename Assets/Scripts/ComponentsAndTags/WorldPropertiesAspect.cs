@@ -1,14 +1,11 @@
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
-using Unity.VisualScripting;
 
 public readonly partial struct WorldPropertiesAspect : IAspect
 {
     public readonly Entity Entity;
     public readonly DynamicBuffer<CellConfigurationProperties> cellProperties;
-    //public readonly DynamicBuffer<CellRule> cellRules;
-
     private readonly RefRW<CellRandom> _cellRandom;
     private readonly RefRW<WorldProperties> _worldProperties;
 
@@ -32,22 +29,4 @@ public readonly partial struct WorldPropertiesAspect : IAspect
 
         return new float3(x, 0, z);
     }
-
-    public NativeArray<CellConfigurationProperties> CellConfigurations
-    {
-        get
-        {
-            var em = World.DefaultGameObjectInjectionWorld.EntityManager;
-            em.GetAllUniqueSharedComponents(out NativeList<SharedRulesGrouping> uniqueCellRuleTypes, Allocator.Persistent);
-                return cellProperties.ToNativeArray(Allocator.TempJob);
-        }
-    }
-
-    //public NativeArray<CellRule> CellRules
-    //{
-    //    get
-    //    {
-    //        return cellRules.ToNativeArray(Allocator.TempJob);
-    //    }
-    //}
 }

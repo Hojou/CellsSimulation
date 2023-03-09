@@ -1,36 +1,33 @@
-using System;
-using System.Linq;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 
-public struct SharedRulesGrouping : ISharedComponentData
-{
-    public int Group;
-}
-
 [BurstCompile]
+[RequireMatchingQueriesForUpdate]
 [UpdateInGroup(typeof(InitializationSystemGroup))]
 public partial struct SpawnCellsSystem : ISystem
 {
     private EntityQuery _jobQuery;
+    private EntityCommandBuffer _ecb;
 
     [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
-        state.RequireForUpdate<WorldProperties>();
         using var queryBuilder = new EntityQueryBuilder(Allocator.Temp)
                 .WithAll<CellProperties>()
                 .WithAll<SharedRulesGrouping>()
                 .WithAll<LocalTransform>();
         _jobQuery = state.GetEntityQuery(queryBuilder);
+        _ecb = new EntityCommandBuffer(Allocator.Persistent);
+
     }
 
     [BurstCompile]
     public void OnDestroy(ref SystemState state)
     {
+        _ecb.Dispose();
     }
 
     [BurstCompile]
@@ -46,7 +43,6 @@ public partial struct SpawnCellsSystem : ISystem
 
     private void UpdateCellCount(DynamicBuffer<CellConfigurationProperties> cellsBuffer, Entity worldEntity, SystemState state)
     {
-        var ecb = new EntityCommandBuffer(Allocator.Temp);
         var aspect = SystemAPI.GetAspectRW<WorldPropertiesAspect>(worldEntity);
 
         foreach (var rule in cellsBuffer)
@@ -62,23 +58,23 @@ public partial struct SpawnCellsSystem : ISystem
             {   // Add more
                 for (int i = 0; i < difference; i++)
                 {
-                    var cell = ecb.Instantiate(rule.Prefab);
-                    ecb.SetComponent(cell, new LocalTransform
+                    var cell = _ecb.Instantiate(rule.Prefab);
+                    _ecb.SetComponent(cell, new LocalTransform
                     {
                         Position = aspect.GetRandomPosition(),
                         Rotation = quaternion.identity,
                         Scale = aspect.Scale
                     });
 
-                    ecb.AddComponent(cell, new CellProperties
+                    _ecb.AddComponent(cell, new CellProperties
                     {
                         Id = rule.Id,
                         Velocity = new float3(0, 0, 0),
                     });
 
-                    ecb.AddSharedComponent(cell, rulesComponent);
+                    _ecb.AddSharedComponent(cell, rulesComponent);
 
-                    ecb.AddBuffer<VelocityChange>(cell);
+                    _ecb.AddBuffer<VelocityChange>(cell);
                 }
             }
             else
@@ -92,13 +88,13 @@ public partial struct SpawnCellsSystem : ISystem
                     entities[i] = allEntities[i];
                 }
 
-                ecb.DestroyEntity(entities);
+                _ecb.DestroyEntity(entities);
                 entities.Dispose();
             }
         }
 
         cellsBuffer.Clear();
-        ecb.SetBuffer<CellConfigurationProperties>(worldEntity);
-        ecb.Playback(state.EntityManager);
+        _ecb.SetBuffer<CellConfigurationProperties>(worldEntity);
+        _ecb.Playback(state.EntityManager);
     }
 }

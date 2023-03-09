@@ -3,13 +3,13 @@ using Unity.Entities;
 using Unity.Mathematics;
 
 [BurstCompile]
+[RequireMatchingQueriesForUpdate]
 [UpdateAfter(typeof(ApplyRulesSystem))]
 public partial struct MoveCellsSystem : ISystem
 {
     [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
-        state.RequireForUpdate<WorldProperties>();
     }
 
     [BurstCompile]

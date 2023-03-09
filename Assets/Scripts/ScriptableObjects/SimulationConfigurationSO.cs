@@ -3,15 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using Unity.VisualScripting;
-using UnityEditor.Rendering;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "SimulationConfiguration", menuName = "Simulation/SimulationConfiguration")]
 
 public class SimulationConfigurationSO : ScriptableObject
 {
+    private readonly char[] jsonExtension = ".json".ToCharArray();
     public float Strength;
     public float Scale;
     public float Influence;
@@ -30,7 +28,7 @@ public class SimulationConfigurationSO : ScriptableObject
         get
         {
             if (string.IsNullOrEmpty(_userFileName)) return name;
-            return _userFileName.Substring(folderPath.Length + 1).TrimEnd(".json");
+            return _userFileName[(folderPath.Length + 1)..].TrimEnd(jsonExtension);
         }
     }
 
@@ -82,7 +80,8 @@ public class SimulationConfigurationSO : ScriptableObject
     {
         if (!Directory.Exists(folderPath))
         {
-            return null;
+            return new SimulationConfigurationSO[] { };
+            //return null;
         }
 
         var fileNames = Directory.GetFiles(folderPath);

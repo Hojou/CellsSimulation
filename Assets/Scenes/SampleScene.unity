@@ -183,8 +183,8 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 2
-  field of view: 60
-  orthographic: 1
+  field of view: 160
+  orthographic: 0
   orthographic size: 6
   m_Depth: -1
   m_CullingMask:
@@ -252,6 +252,13 @@ MonoBehaviour:
   m_RequiresDepthTexture: 0
   m_RequiresColorTexture: 0
   m_Version: 2
+  m_TaaSettings:
+    quality: 3
+    frameInfluence: 0.1
+    jitterScale: 1
+    mipBias: 0
+    varianceClampScale: 0.9
+    contrastAdaptiveSharpening: 0
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -359,7 +366,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Version: 2
+  m_Version: 3
   m_UsePipelineSettings: 1
   m_AdditionalLightsShadowResolutionTier: 2
   m_LightLayerMask: 1
@@ -369,7 +376,7 @@ MonoBehaviour:
   m_ShadowRenderingLayers: 1
   m_LightCookieSize: {x: 1, y: 1}
   m_LightCookieOffset: {x: 0, y: 0}
-  m_SoftShadowQuality: 1
+  m_SoftShadowQuality: 2
 --- !u!1 &759471586
 GameObject:
   m_ObjectHideFlags: 0
@@ -436,9 +443,9 @@ MonoBehaviour:
     x: 0
     y: 0
   simulationConfigurations:
-  - {fileID: 11400000, guid: 25c1b55bbe78cbe4db302f0ee84a133a, type: 2}
   - {fileID: 11400000, guid: 7c8d8a03242d8b5409e6357c6b4060bf, type: 2}
   - {fileID: 11400000, guid: 5968092c8bfeafc4b9556e1a8c9a4377, type: 2}
+  - {fileID: 11400000, guid: 25c1b55bbe78cbe4db302f0ee84a133a, type: 2}
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0

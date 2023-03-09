@@ -7,6 +7,7 @@ using Unity.Transforms;
 
 [BurstCompile]
 [UpdateInGroup(typeof(SimulationSystemGroup))]
+[RequireMatchingQueriesForUpdate]
 public partial struct ApplyRulesSystem : ISystem
 {
     private EntityQuery _jobQuery;
@@ -14,7 +15,6 @@ public partial struct ApplyRulesSystem : ISystem
     [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
-        state.RequireForUpdate<WorldProperties>();
         using var queryBuilder = new EntityQueryBuilder(Allocator.Temp)
                         .WithAll<CellProperties>()
                         .WithAll<SharedRulesGrouping>()
@@ -31,11 +31,15 @@ public partial struct ApplyRulesSystem : ISystem
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        var cellProperties = _jobQuery.ToComponentDataArray<CellProperties>(Allocator.TempJob); 
-        var cellLocations = _jobQuery.ToComponentDataArray<LocalTransform>(Allocator.TempJob);
         var worldEntity = SystemAPI.GetSingletonEntity<WorldProperties>();
+        if (!state.EntityManager.HasComponent<CellRules>(worldEntity))
+        {
+            return;
+        }
+        using var cellProperties = _jobQuery.ToComponentDataArray<CellProperties>(Allocator.TempJob); 
+        using var cellLocations = _jobQuery.ToComponentDataArray<LocalTransform>(Allocator.TempJob);
         var props = SystemAPI.GetComponent<WorldProperties>(worldEntity);
-
+        var rules = SystemAPI.GetComponent<CellRules>(worldEntity).Value;
 
         state.EntityManager.GetAllUniqueSharedComponents(out NativeList<SharedRulesGrouping> uniqueCellRuleTypes, Allocator.TempJob);
         foreach (var cellType in uniqueCellRuleTypes)
@@ -52,13 +56,14 @@ public partial struct ApplyRulesSystem : ISystem
             {
                 CellPositions = cellLocations,
                 CellProperties = cellProperties,
-                CellRules = props.Rules,
+                CellRules = rules,
                 Distance = props.Influence
             };
             job.ScheduleParallel(_jobQuery);
 
             _jobQuery.ResetFilter();
         }
+        uniqueCellRuleTypes.Dispose();
         state.Dependency.Complete();
     }
 }
