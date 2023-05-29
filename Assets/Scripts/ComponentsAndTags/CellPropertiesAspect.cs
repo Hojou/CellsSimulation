@@ -6,9 +6,7 @@ public readonly partial struct CellPropertiesAspect : IAspect
 {
     private readonly RefRW<CellProperties> cellProperties;
     private readonly TransformAspect transform;
-    public readonly DynamicBuffer<VelocityChange> velocityChanges;
-
-    public int Id => cellProperties.ValueRO.Id;
+    
     public float3 LocalPosition
     {
         get => transform.LocalPosition;
@@ -20,4 +18,3 @@ public readonly partial struct CellPropertiesAspect : IAspect
         set => cellProperties.ValueRW.Velocity = value;
     }
 }
-

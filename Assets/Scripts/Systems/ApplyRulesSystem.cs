@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -18,14 +17,8 @@ public partial struct ApplyRulesSystem : ISystem
         using var queryBuilder = new EntityQueryBuilder(Allocator.Temp)
                         .WithAll<CellProperties>()
                         .WithAll<SharedRulesGrouping>()
-                        .WithAll<LocalTransform>()
-                        ;
+                        .WithAll<LocalTransform>();
         _jobQuery = state.GetEntityQuery(queryBuilder);
-    }
-
-    [BurstCompile]
-    public void OnDestroy(ref SystemState state)
-    {
     }
 
     [BurstCompile]

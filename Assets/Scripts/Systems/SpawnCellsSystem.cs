@@ -11,6 +11,8 @@ public partial struct SpawnCellsSystem : ISystem
 {
     private EntityQuery _jobQuery;
     private EntityCommandBuffer _ecb;
+    private Entity _worldEntity;
+    private EntityManager _entityManager;
 
     [BurstCompile]
     public void OnCreate(ref SystemState state)
@@ -21,7 +23,6 @@ public partial struct SpawnCellsSystem : ISystem
                 .WithAll<LocalTransform>();
         _jobQuery = state.GetEntityQuery(queryBuilder);
         _ecb = new EntityCommandBuffer(Allocator.Persistent);
-
     }
 
     [BurstCompile]
@@ -33,18 +34,18 @@ public partial struct SpawnCellsSystem : ISystem
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        var worldEntity = SystemAPI.GetSingletonEntity<WorldProperties>();
-        var cellsBuffer = SystemAPI.GetBuffer<CellConfigurationProperties>(worldEntity);
+        _worldEntity = SystemAPI.GetSingletonEntity<WorldProperties>();
+        _entityManager = state.EntityManager;
+        var cellsBuffer = SystemAPI.GetBuffer<CellConfigurationProperties>(_worldEntity);
         if (!cellsBuffer.IsEmpty)
         {
-            UpdateCellCount(cellsBuffer, worldEntity, state);
+            UpdateCellCount(cellsBuffer, state);
         }
     }
 
-    private void UpdateCellCount(DynamicBuffer<CellConfigurationProperties> cellsBuffer, Entity worldEntity, SystemState state)
+    private void UpdateCellCount(DynamicBuffer<CellConfigurationProperties> cellsBuffer, SystemState state)
     {
-        var aspect = SystemAPI.GetAspectRW<WorldPropertiesAspect>(worldEntity);
-
+        var aspect = SystemAPI.GetAspectRW<WorldPropertiesAspect>(_worldEntity);
         foreach (var rule in cellsBuffer)
         {
             var desiredCount = math.clamp(rule.NumberOfCells, 0, 10000);
@@ -53,6 +54,7 @@ public partial struct SpawnCellsSystem : ISystem
             _jobQuery.SetSharedComponentFilter(rulesComponent);
             int currentCount = _jobQuery.CalculateEntityCount();
             int difference = desiredCount - currentCount;
+            if (difference == 0) continue;
 
             if (difference > 0)
             {   // Add more
@@ -73,8 +75,6 @@ public partial struct SpawnCellsSystem : ISystem
                     });
 
                     _ecb.AddSharedComponent(cell, rulesComponent);
-
-                    _ecb.AddBuffer<VelocityChange>(cell);
                 }
             }
             else
@@ -94,7 +94,7 @@ public partial struct SpawnCellsSystem : ISystem
         }
 
         cellsBuffer.Clear();
-        _ecb.SetBuffer<CellConfigurationProperties>(worldEntity);
-        _ecb.Playback(state.EntityManager);
+        _ecb.SetBuffer<CellConfigurationProperties>(_worldEntity);
+        _ecb.Playback(_entityManager);
     }
 }

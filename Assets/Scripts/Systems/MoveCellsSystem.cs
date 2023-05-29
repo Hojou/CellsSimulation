@@ -8,16 +8,6 @@ using Unity.Mathematics;
 public partial struct MoveCellsSystem : ISystem
 {
     [BurstCompile]
-    public void OnCreate(ref SystemState state)
-    {
-    }
-
-    [BurstCompile]
-    public void OnDestroy(ref SystemState state)
-    {
-    }
-
-    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         var deltaTime = math.min(0.05f, SystemAPI.Time.DeltaTime);
@@ -43,6 +33,8 @@ public partial struct MoveCellJob: IJobEntity
     public float MaxX;
     public float MinY;
     public float MaxY;
+    
+    [BurstCompile]
     private void Execute(ref CellPropertiesAspect aspect)
     {
         var velocity = aspect.Velocity;
